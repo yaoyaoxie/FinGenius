@@ -90,6 +90,52 @@ class BrowserSettings(BaseModel):
     )
 
 
+class MCPServerConfig(BaseModel):
+    """Configuration for a single MCP server"""
+
+    type: str = Field(..., description="Server connection type (sse or stdio)")
+    url: Optional[str] = Field(None, description="Server URL for SSE connections")
+    command: Optional[str] = Field(None, description="Command for stdio connections")
+    args: List[str] = Field(
+        default_factory=list, description="Arguments for stdio command"
+    )
+
+
+class MCPSettings(BaseModel):
+    """Configuration for MCP (Model Context Protocol)"""
+
+    server_reference: str = Field(
+        "app.mcp.server", description="Module reference for the MCP server"
+    )
+    servers: Dict[str, MCPServerConfig] = Field(
+        default_factory=dict, description="MCP server configurations"
+    )
+
+    @classmethod
+    def load_server_config(cls) -> Dict[str, MCPServerConfig]:
+        """Load MCP server configuration from JSON file"""
+        config_path = PROJECT_ROOT / "config" / "mcp.json"
+
+        try:
+            config_file = config_path if config_path.exists() else None
+            if not config_file:
+                return {}
+
+            with config_file.open() as f:
+                data = json.load(f)
+                servers = {}
+
+                for server_id, server_config in data.get("mcpServers", {}).items():
+                    servers[server_id] = MCPServerConfig(
+                        type=server_config["type"],
+                        url=server_config.get("url"),
+                        command=server_config.get("command"),
+                        args=server_config.get("args", []),
+                    )
+                return servers
+        except Exception as e:
+            raise ValueError(f"Failed to load MCP server config: {e}")
+
 
 class AppConfig(BaseModel):
     llm: Dict[str, LLMSettings]
@@ -99,6 +145,7 @@ class AppConfig(BaseModel):
     search_config: Optional[SearchSettings] = Field(
         None, description="Search configuration"
     )
+    mcp_config: Optional[MCPSettings] = Field(None, description="MCP configuration")
 
     class Config:
         arbitrary_types_allowed = True
@@ -196,6 +243,14 @@ class Config:
         if search_config:
             search_settings = SearchSettings(**search_config)
 
+        mcp_config = raw_config.get("mcp", {})
+        if mcp_config:
+            # Load server configurations from JSON
+            mcp_config["servers"] = MCPSettings.load_server_config()
+            mcp_settings = MCPSettings(**mcp_config)
+        else:
+            mcp_settings = MCPSettings(servers=MCPSettings.load_server_config())
+
         config_dict = {
             "llm": {
                 "default": default_settings,
@@ -206,6 +261,7 @@ class Config:
             },
             "browser_config": browser_settings,
             "search_config": search_settings,
+            "mcp_config": mcp_settings,
         }
 
         self._config = AppConfig(**config_dict)
@@ -221,6 +277,11 @@ class Config:
     @property
     def search_config(self) -> Optional[SearchSettings]:
         return self._config.search_config
+
+    @property
+    def mcp_config(self) -> MCPSettings:
+        """Get the MCP configuration"""
+        return self._config.mcp_config
 
     @property
     def workspace_root(self) -> Path:
