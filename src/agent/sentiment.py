@@ -2,6 +2,7 @@ from typing import Any, List, Optional
 
 from pydantic import Field
 
+from src.agent.mcp import MCPAgent
 from src.prompt.sentiment import SENTIMENT_SYSTEM_PROMPT
 
 from src.agent.toolcall import ToolCallAgent
@@ -11,7 +12,7 @@ from src.tool.sentiment import SentimentTool
 from src.tool.web_search import WebSearch
 
 
-class SentimentAgent(ToolCallAgent):
+class SentimentAgent(MCPAgent):
     """Sentiment analysis agent focused on market sentiment and news."""
 
     name: str = "sentiment_agent"

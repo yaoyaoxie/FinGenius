@@ -2,14 +2,14 @@ from typing import Any, List, Optional
 
 from pydantic import Field
 
-from src.agent.toolcall import ToolCallAgent
+from src.agent.mcp import MCPAgent
 from src.prompt.risk_control import RISK_SYSTEM_PROMPT
 from src.schema import Message
 from src.tool import Terminate, ToolCollection
 from src.tool.risk_control import RiskControlTool
 
 
-class RiskControlAgent(ToolCallAgent):
+class RiskControlAgent(MCPAgent):
     """Risk analysis agent focused on identifying and quantifying investment risks."""
 
     name: str = "risk_control_agent"

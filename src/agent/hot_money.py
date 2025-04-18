@@ -2,15 +2,15 @@ from typing import Any, List, Optional
 
 from pydantic import Field
 
+from src.agent.mcp import MCPAgent
 from src.prompt.hot_money import HOT_MONEY_SYSTEM_PROMPT
 
-from src.agent.toolcall import ToolCallAgent
 from src.schema import Message
 from src.tool import Terminate, ToolCollection
 from src.tool.hot_money import HotMoneyTool
 
 
-class HotMoneyAgent(ToolCallAgent):
+class HotMoneyAgent(MCPAgent):
     """Hot money analysis agent focused on institutional trading patterns."""
 
     name: str = "hot_money_agent"

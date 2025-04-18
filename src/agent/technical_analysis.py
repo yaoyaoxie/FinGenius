@@ -2,6 +2,7 @@ from typing import Any, List, Optional
 
 from pydantic import Field
 
+from src.agent.mcp import MCPAgent
 from src.prompt.technical_analysis import TECHNICAL_ANALYSIS_SYSTEM_PROMPT
 
 from src.agent.toolcall import ToolCallAgent
@@ -10,7 +11,7 @@ from src.tool import Terminate, ToolCollection
 from src.tool.technical_analysis import TechnicalAnalysisTool
 
 
-class TechnicalAnalysisAgent(ToolCallAgent):
+class TechnicalAnalysisAgent(MCPAgent):
     """Technical analysis agent applying technical indicators to stock analysis."""
 
     name: str = "technical_analysis_agent"
