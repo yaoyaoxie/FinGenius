@@ -58,3 +58,51 @@ class EnvironmentType(str, Enum):
 
     RESEARCH = "research"
     BATTLE = "battle"
+
+
+class EnvironmentFactory:
+    """Factory for creating different types of environments with support for multiple agents"""
+
+    @staticmethod
+    async def create_environment(
+        environment_type: EnvironmentType,
+        agents: Union[BaseAgent, List[BaseAgent], Dict[str, BaseAgent]] = None,
+        **kwargs,
+    ) -> BaseEnvironment:
+        """Create and initialize an environment of the specified type
+
+        Args:
+            environment_type: The type of environment to create
+            agents: One or more agents to add to the environment
+            **kwargs: Additional arguments to pass to the environment constructor
+
+        Returns:
+            An initialized environment instance
+        """
+        from src.environment.battle import BattleEnvironment
+        from src.environment.research import ResearchEnvironment
+
+        environments = {
+            EnvironmentType.RESEARCH: ResearchEnvironment,
+            EnvironmentType.BATTLE: BattleEnvironment,
+        }
+
+        environment_class = environments.get(environment_type)
+        if not environment_class:
+            raise ValueError(f"Unknown environment type: {environment_type}")
+
+        # Create the environment
+        environment = await environment_class.create(**kwargs)
+
+        # Add agents if provided
+        if agents:
+            if isinstance(agents, BaseAgent):
+                environment.add_agent(agents)
+            elif isinstance(agents, list):
+                for agent in agents:
+                    environment.add_agent(agent)
+            elif isinstance(agents, dict):
+                for agent in agents.values():
+                    environment.add_agent(agent)
+
+        return environment
