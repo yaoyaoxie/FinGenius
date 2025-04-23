@@ -90,6 +90,22 @@ class BrowserSettings(BaseModel):
     )
 
 
+class TTSSettings(BaseModel):
+    """配置文本转语音工具"""
+    appid: str = Field("", description="Volcengine TTS平台应用ID")
+    access_token: str = Field("", description="Volcengine TTS访问令牌")
+    cluster: str = Field("volcano_tts", description="TTS集群名称")
+    host: str = Field("openspeech.bytedance.com", description="API主机地址")
+    default_voice_type: str = Field(
+        "zh_male_beijingxiaoye_moon_bigtts", 
+        description="默认语音类型，用于股票结果播报"
+    )
+    default_output_dir: str = Field(
+        "results", 
+        description="默认音频文件输出目录"
+    )
+
+
 class MCPServerConfig(BaseModel):
     """Configuration for a single MCP server"""
 
@@ -146,6 +162,7 @@ class AppConfig(BaseModel):
         None, description="Search configuration"
     )
     mcp_config: Optional[MCPSettings] = Field(None, description="MCP configuration")
+    tts_config: Optional[TTSSettings] = Field(None, description="TTS configuration")
 
     class Config:
         arbitrary_types_allowed = True
@@ -244,12 +261,22 @@ class Config:
             search_settings = SearchSettings(**search_config)
 
         mcp_config = raw_config.get("mcp", {})
+        mcp_settings = None
         if mcp_config:
             # Load server configurations from JSON
             mcp_config["servers"] = MCPSettings.load_server_config()
             mcp_settings = MCPSettings(**mcp_config)
         else:
             mcp_settings = MCPSettings(servers=MCPSettings.load_server_config())
+
+        # 加载TTS配置
+        tts_config = raw_config.get("tts", {})
+        tts_settings = None
+        if tts_config:
+            tts_settings = TTSSettings(**tts_config)
+        else:
+            # 创建默认TTS配置
+            tts_settings = TTSSettings()
 
         config_dict = {
             "llm": {
@@ -262,6 +289,7 @@ class Config:
             "browser_config": browser_settings,
             "search_config": search_settings,
             "mcp_config": mcp_settings,
+            "tts_config": tts_settings,
         }
 
         self._config = AppConfig(**config_dict)
@@ -282,6 +310,11 @@ class Config:
     def mcp_config(self) -> MCPSettings:
         """Get the MCP configuration"""
         return self._config.mcp_config
+        
+    @property
+    def tts_config(self) -> TTSSettings:
+        """获取TTS配置"""
+        return self._config.tts_config
 
     @property
     def workspace_root(self) -> Path:

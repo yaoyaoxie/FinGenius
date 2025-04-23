@@ -192,3 +192,12 @@ class BaseAgent(BaseModel, ABC):
     def messages(self, value: List[Message]):
         """Set the list of messages in the agent's memory."""
         self.memory.messages = value
+
+    def reset_execution_state(self) -> None:
+        """Reset the agent's execution state to prepare for a new run.
+
+        Resets the current step counter to zero and returns the agent to IDLE state.
+        """
+        self.current_step = 0
+        self.state = AgentState.IDLE
+        logger.info(f"Agent '{self.name}' execution state has been reset")
