@@ -44,7 +44,7 @@ class ToolResult(BaseModel):
         arbitrary_types_allowed = True
 
     def __bool__(self):
-        return any(getattr(self, field) for field in self.__fields__)
+        return any(getattr(self, field) for field in self.model_fields)
 
     def __add__(self, other: "ToolResult"):
         def combine_fields(
