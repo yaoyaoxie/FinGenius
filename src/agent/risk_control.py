@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 from pydantic import Field
 
 from src.agent.mcp import MCPAgent
+from src.prompt.mcp import NEXT_STEP_PROMPT_ZN
 from src.prompt.risk_control import RISK_SYSTEM_PROMPT
 from src.schema import Message
 from src.tool import Terminate, ToolCollection
@@ -15,6 +16,7 @@ class RiskControlAgent(MCPAgent):
     name: str = "risk_control_agent"
     description: str = "Analyzes financial risks and proposes risk control strategies for stock investments."
     system_prompt: str = RISK_SYSTEM_PROMPT
+    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools with proper type annotation
     available_tools: ToolCollection = Field(
@@ -42,11 +44,10 @@ class RiskControlAgent(MCPAgent):
             # Set up system message about the stock being analyzed
             self.memory.add_message(
                 Message.system_message(
-                    f"You are now analyzing risk factors for stock: {stock_code}. "
-                    f"Gather relevant financial data and perform comprehensive risk assessment."
+                    f"你正在分析股票 {stock_code} 的风险因素。请收集相关财务数据并进行全面风险评估。"
                 )
             )
-            request = f"Perform a comprehensive risk analysis for {stock_code}"
+            request = f"请对 {stock_code} 进行全面的风险分析。"
 
         # Call parent implementation with the request
         return await super().run(request)

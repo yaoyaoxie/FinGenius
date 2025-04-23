@@ -9,7 +9,8 @@ from typing import Any, Dict, Optional
 
 from mcp.server import FastMCP
 from src.logger import logger
-from src.tool import BaseTool, Terminate
+from src.tool import BaseTool, Battle, Terminate
+
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
 
@@ -29,6 +30,7 @@ class MCPServer:
         self.tools.update(
             {
                 "terminate": Terminate(),
+                "battle": Battle(),
             }
         )
 

@@ -4,6 +4,7 @@ from pydantic import Field
 
 from src.agent.mcp import MCPAgent
 from src.prompt.hot_money import HOT_MONEY_SYSTEM_PROMPT
+from src.prompt.mcp import NEXT_STEP_PROMPT_ZN
 
 from src.schema import Message
 from src.tool import Terminate, ToolCollection
@@ -19,6 +20,7 @@ class HotMoneyAgent(MCPAgent):
     )
 
     system_prompt: str = HOT_MONEY_SYSTEM_PROMPT
+    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools with proper type annotation
     available_tools: ToolCollection = Field(
@@ -46,14 +48,10 @@ class HotMoneyAgent(MCPAgent):
             # Set up system message about the stock being analyzed
             self.memory.add_message(
                 Message.system_message(
-                    f"You are now analyzing institutional trading patterns for stock: {stock_code}. "
-                    f"Identify major institutional investors, track recent changes in ownership, "
-                    f"and analyze trading patterns for smart money movement."
+                    f"你正在分析股票 {stock_code} 的机构交易行为。请识别主要机构投资者，追踪持股变动，并分析资金流向与交易模式。"
                 )
             )
-            request = (
-                f"Analyze institutional trading and fund positions for {stock_code}"
-            )
+            request = f"请分析 {stock_code} 的机构交易和资金持仓情况。"
 
         # Call parent implementation with the request
         return await super().run(request)

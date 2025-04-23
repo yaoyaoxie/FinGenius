@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 from pydantic import Field
 
 from src.agent.mcp import MCPAgent
+from src.prompt.mcp import NEXT_STEP_PROMPT_ZN
 from src.prompt.technical_analysis import TECHNICAL_ANALYSIS_SYSTEM_PROMPT
 
 from src.agent.toolcall import ToolCallAgent
@@ -20,6 +21,7 @@ class TechnicalAnalysisAgent(MCPAgent):
     )
 
     system_prompt: str = TECHNICAL_ANALYSIS_SYSTEM_PROMPT
+    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools with proper type annotation
     available_tools: ToolCollection = Field(
@@ -47,13 +49,11 @@ class TechnicalAnalysisAgent(MCPAgent):
             # Set up system message about the stock being analyzed
             self.memory.add_message(
                 Message.system_message(
-                    f"You are now performing technical analysis for stock: {stock_code}. "
-                    f"Evaluate price trends, chart patterns, and key technical indicators "
-                    f"to formulate short and medium-term trading strategies."
+                    f"你正在对股票 {stock_code} 进行技术面分析。请评估价格走势、图表形态和关键技术指标，形成短中期交易策略。"
                 )
             )
             request = (
-                f"Analyze technical indicators and chart patterns for {stock_code}"
+                f"请分析 {stock_code} 的技术指标和图表形态。"
             )
 
         # Call parent implementation with the request
