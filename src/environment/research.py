@@ -99,11 +99,11 @@ class ResearchEnvironment(BaseEnvironment):
             # Prepare summary for report agent
             summary = "\n\n".join(
                 [
-                    f"Specialist agent research for {stock_code}:",
-                    f"Sentiment Analysis: {results.get('sentiment', 'Not available')}",
-                    f"Risk Analysis: {results.get('risk', 'Not available')}",
-                    f"Hot Money Analysis: {results.get('hot_money', 'Not available')}",
-                    f"Technical Analysis: {results.get('technical', 'Not available')}",
+                    f"金融专家对{stock_code}的研究结果如下：",
+                    f"情感分析：{results.get('sentiment', '暂无数据')}",
+                    f"风险分析：{results.get('risk', '暂无数据')}",
+                    f"游资分析：{results.get('hot_money', '暂无数据')}",
+                    f"技术面分析：{results.get('technical', '暂无数据')}",
                 ]
             )
 
@@ -118,7 +118,7 @@ class ResearchEnvironment(BaseEnvironment):
 
                 report_agent.memory.add_message(Message.system_message(summary))
                 report = await report_agent.run(
-                    request=f"Generate a comprehensive report for stock {stock_code} based on specialist research"
+                    request=f"基于专家研究结果为股票{stock_code}生成一份综合报告"
                 )
                 results["report"] = report
 

@@ -40,14 +40,14 @@ AGENT_INSTRUCTIONS = """
 
 def get_agent_instructions(agent_name: str = "", agent_description: str = "") -> str:
     """
-    根据代理名称和描述生成个性化的指令
+    根据智能体名称和描述生成个性化的指令
 
     Args:
-        agent_name: 代理名称
-        agent_description: 代理描述
+        agent_name: 智能体名称
+        agent_description: 智能体描述
 
     Returns:
-        格式化的代理指令
+        格式化的智能体指令
     """
     return f"""
 {agent_description}
@@ -95,10 +95,10 @@ def get_agent_instructions(agent_name: str = "", agent_description: str = "") ->
 
 def get_broadcast_message(sender_name: str, content: str, action_type: str) -> str:
     """
-    生成广播消息，通知所有代理某代理的行动
+    生成广播消息，通知所有智能体某智能体的行动
 
     Args:
-        sender_name: 发送消息的代理名称
+        sender_name: 发送消息的智能体名称
         content: 消息内容
         action_type: 行动类型
 
