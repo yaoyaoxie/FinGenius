@@ -56,7 +56,7 @@ class Message(BaseModel):
 
     role: ROLE_TYPE = Field(...)  # type: ignore
     content: Optional[str] = Field(default=None)
-    tool_calls: Optional[List[ToolCall]] = Field(default=None)
+    tool_calls: Optional[List[Any]] = Field(default=None)
     name: Optional[str] = Field(default=None)
     tool_call_id: Optional[str] = Field(default=None)
     base64_image: Optional[str] = Field(default=None)
@@ -87,7 +87,13 @@ class Message(BaseModel):
         if self.content is not None:
             message["content"] = self.content
         if self.tool_calls is not None:
-            message["tool_calls"] = [tool_call.dict() for tool_call in self.tool_calls]
+            message["tool_calls"] = [
+                # Handle both Pydantic model objects and plain dictionaries
+                tool_call.model_dump()
+                if hasattr(tool_call, "model_dump")
+                else (tool_call.dict() if hasattr(tool_call, "dict") else tool_call)
+                for tool_call in self.tool_calls
+            ]
         if self.name is not None:
             message["name"] = self.name
         if self.tool_call_id is not None:
@@ -104,9 +110,11 @@ class Message(BaseModel):
         return cls(role=Role.USER, content=content, base64_image=base64_image)
 
     @classmethod
-    def system_message(cls, content: str) -> "Message":
+    def system_message(
+        cls, content: str, base64_image: Optional[str] = None
+    ) -> "Message":
         """Create a system message"""
-        return cls(role=Role.SYSTEM, content=content)
+        return cls(role=Role.SYSTEM, content=content, base64_image=base64_image)
 
     @classmethod
     def assistant_message(
@@ -170,6 +178,9 @@ class Memory(BaseModel):
     def add_messages(self, messages: List[Message]) -> None:
         """Add multiple messages to memory"""
         self.messages.extend(messages)
+        # Optional: Implement message limit
+        if len(self.messages) > self.max_messages:
+            self.messages = self.messages[-self.max_messages :]
 
     def clear(self) -> None:
         """Clear all messages"""
