@@ -9,9 +9,9 @@ from pydantic import Field
 
 from src.logger import logger
 from src.tool.base import BaseTool, ToolResult
-from src.tool.fin_genius.get_section_data import get_all_section
-from src.tool.fin_genius.index_capital import get_index_capital_flow
-from src.tool.fin_genius.stock_capital import get_stock_capital_flow
+from src.tool.financial_deep_search.get_section_data import get_all_section
+from src.tool.financial_deep_search.index_capital import get_index_capital_flow
+from src.tool.financial_deep_search.stock_capital import get_stock_capital_flow
 
 
 _HOT_MONEY_DESCRIPTION = """

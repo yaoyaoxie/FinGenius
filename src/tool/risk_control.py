@@ -2,7 +2,7 @@ import asyncio
 
 from src.logger import logger
 from src.tool.base import BaseTool, ToolResult
-from src.tool.fin_genius.risk_control_data import get_risk_control_data
+from src.tool.financial_deep_search.risk_control_data import get_risk_control_data
 
 
 class RiskControlTool(BaseTool):

@@ -8,7 +8,7 @@ import efinance as ef
 
 from src.logger import logger
 from src.tool.base import BaseTool, ToolResult
-from src.tool.fin_genius.stock_capital import get_stock_capital_flow
+from src.tool.financial_deep_search.stock_capital import get_stock_capital_flow
 
 
 class TechnicalAnalysisTool(BaseTool):
