@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 
 from mcp.server import FastMCP
 from src.logger import logger
-from src.tool import BaseTool, Battle, Terminate
+from src.tool import BaseTool, Terminate
 
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
@@ -30,7 +30,6 @@ class MCPServer:
         self.tools.update(
             {
                 "terminate": Terminate(),
-                "battle": Battle(),
             }
         )
 
@@ -170,11 +169,3 @@ def parse_args() -> argparse.Namespace:
         help="Communication method: stdio or http (default: stdio)",
     )
     return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
-
-    # Create and run server (maintaining original flow)
-    server = MCPServer()
-    server.run(transport=args.transport)
