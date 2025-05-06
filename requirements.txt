@@ -24,3 +24,5 @@ requests~=2.32.3
 duckduckgo-search~=7.5.5
 efinance~=0.5.5.2
 akshare~=1.16.87
+uvicorn
+starlette

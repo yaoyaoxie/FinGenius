@@ -7,7 +7,15 @@ import sys
 from inspect import Parameter, Signature
 from typing import Any, Dict, Optional
 
-from mcp.server import FastMCP
+import uvicorn
+from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.routing import Mount, Route
+
+from mcp.server import FastMCP, Server
+from mcp.server.sse import SseServerTransport
 from src.logger import logger
 from src.tool import BaseTool, Terminate
 
@@ -159,13 +167,106 @@ class MCPServer:
         self.server.run(transport=transport)
 
 
+def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlette:
+    """Create a Starlette application that can serve the provided mcp server with SSE."""
+    # Set up CORS middleware to allow connections from any origin
+    middleware = [
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_methods=["*"],
+            allow_headers=["*"],
+            allow_credentials=True,
+        )
+    ]
+
+    # Use '/messages/' as the endpoint path for SSE connections
+    sse = SseServerTransport("/messages/")
+
+    async def handle_sse(request: Request) -> None:
+        try:
+            logger.info(f"SSE connection request received from {request.client}")
+            async with sse.connect_sse(
+                request.scope,
+                request.receive,
+                request._send,  # noqa: SLF001
+            ) as (read_stream, write_stream):
+                await mcp_server.run(
+                    read_stream,
+                    write_stream,
+                    mcp_server.create_initialization_options(),
+                )
+        except Exception as e:
+            logger.error(f"Error handling SSE connection: {str(e)}")
+            raise
+
+    # Create Starlette app with middleware and routes
+    app = Starlette(
+        debug=debug,
+        middleware=middleware,
+        routes=[
+            Route("/sse", endpoint=handle_sse),
+            Mount("/messages/", app=sse.handle_post_message),
+        ],
+    )
+
+    # Add a health check endpoint
+    @app.route("/health")
+    async def health_check(request: Request):
+        from starlette.responses import JSONResponse
+
+        return JSONResponse(
+            {
+                "status": "ok",
+                "message": "FinGenius server is running",
+            }
+        )
+
+    return app
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="FinGenius MCP Server")
     parser.add_argument(
         "--transport",
-        choices=["stdio"],
+        choices=["stdio", "sse"],
         default="stdio",
-        help="Communication method: stdio or http (default: stdio)",
+        help="Communication method: stdio or sse (default: stdio)",
     )
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to (for sse)")
+    parser.add_argument(
+        "--port", type=int, default=8000, help="Port to listen on (for sse)"
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    if args.transport == "sse":
+        # Create an instance of MCPServer
+        mcp_server = MCPServer()
+        # Register all tools
+        mcp_server.register_all_tools()
+        # Get the underlying mcp_server from FastMCP
+        underlying_server = mcp_server.server._mcp_server  # noqa: WPS437
+
+        logger.info(f"Starting FinGenius server with SSE on {args.host}:{args.port}")
+
+        # Create Starlette application
+        starlette_app = create_starlette_app(underlying_server, debug=args.debug)
+
+        # Run with uvicorn
+        uvicorn.run(
+            starlette_app,
+            host=args.host,
+            port=args.port,
+            log_level="info",
+            access_log=True,
+        )
+    else:
+        # Run in stdio mode
+        mcp_server = MCPServer()
+        mcp_server.run(transport=args.transport)
