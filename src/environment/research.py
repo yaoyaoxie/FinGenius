@@ -20,6 +20,7 @@ class ResearchEnvironment(BaseEnvironment):
     name: str = Field(default="research_environment")
     description: str = Field(default="Environment for comprehensive stock research")
     results: Dict[str, Any] = Field(default_factory=dict)
+    max_steps: int = Field(default=3, description="Maximum steps for each agent")
 
     # Analysis mapping for agent roles
     analysis_mapping: Dict[str, str] = Field(
@@ -37,18 +38,18 @@ class ResearchEnvironment(BaseEnvironment):
 
         # Create specialized analysis agents
         specialized_agents = {
-            "sentiment_agent": await SentimentAgent.create(),
-            "risk_control_agent": await RiskControlAgent.create(),
-            "hot_money_agent": await HotMoneyAgent.create(),
-            "technical_analysis_agent": await TechnicalAnalysisAgent.create(),
-            "report_agent": await ReportAgent.create(),
+            "sentiment_agent": await SentimentAgent.create(max_steps=self.max_steps),
+            "risk_control_agent": await RiskControlAgent.create(max_steps=self.max_steps),
+            "hot_money_agent": await HotMoneyAgent.create(max_steps=self.max_steps),
+            "technical_analysis_agent": await TechnicalAnalysisAgent.create(max_steps=self.max_steps),
+            "report_agent": await ReportAgent.create(max_steps=self.max_steps),
         }
 
         # Register all agents
         for agent in specialized_agents.values():
             self.register_agent(agent)
 
-        logger.info("Research environment initialized with specialized agents")
+        logger.info(f"Research environment initialized with specialized agents (max_steps={self.max_steps})")
 
     async def run(self, stock_code: str) -> Dict[str, Any]:
         """Run research on the given stock code using all specialist agents."""

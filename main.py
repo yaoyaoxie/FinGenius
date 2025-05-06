@@ -11,13 +11,13 @@ from src.logger import logger
 from src.tool.tts_tool import TTSTool
 
 
-async def run_stock_pipeline(stock_code: str):
+async def run_stock_pipeline(stock_code: str, max_steps: int = 3):
     """Research a stock using the agent team and run the battle."""
     logger.info(f"Researching stock {stock_code}...")
 
     # Initialize environments
-    research_env = await ResearchEnvironment.create()
-    battle_env = await BattleEnvironment.create()
+    research_env = await ResearchEnvironment.create(max_steps=max_steps)
+    battle_env = await BattleEnvironment.create(max_steps=max_steps)
 
     try:
         # Run stock research
@@ -180,11 +180,17 @@ async def main():
     parser.add_argument(
         "--tts", action="store_true", help="Enable text-to-speech for the final result"
     )
+    parser.add_argument(
+        "--max-steps", 
+        type=int, 
+        default=3, 
+        help="Maximum number of steps for each agent (default: 3)"
+    )
 
     args = parser.parse_args()
 
     try:
-        results = await run_stock_pipeline(args.stock_code)
+        results = await run_stock_pipeline(args.stock_code, args.max_steps)
         display_results(results, args.format, args.output)
 
         # 如果启用了TTS选项，播报结果

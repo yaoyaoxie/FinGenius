@@ -14,6 +14,7 @@ class BaseEnvironment(BaseModel):
     name: str = Field(default="base_environment")
     description: str = Field(default="Base environment class")
     agents: Dict[str, BaseAgent] = Field(default_factory=dict)
+    max_steps: int = Field(default=3, description="Maximum steps for each agent")
 
     class Config:
         arbitrary_types_allowed = True
@@ -27,7 +28,7 @@ class BaseEnvironment(BaseModel):
 
     async def initialize(self) -> None:
         """Initialize the environment. Override in subclasses."""
-        logger.info(f"Initializing {self.name} environment")
+        logger.info(f"Initializing {self.name} environment (max_steps={self.max_steps})")
 
     def register_agent(self, agent: BaseAgent) -> None:
         """Register an agent with the environment"""

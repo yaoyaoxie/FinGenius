@@ -23,7 +23,7 @@ class MCPAgent(ToolCallAgent):
     next_step_prompt: str = NEXT_STEP_PROMPT
 
     # Configuration values
-    max_steps: int = Field(default=3)
+    max_steps: int = Field(default=10)
     max_observe: int = Field(default=10000)
     refresh_tools_interval: int = Field(
         default=5, description="Refresh tools every N steps"

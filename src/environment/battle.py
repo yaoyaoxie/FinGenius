@@ -88,18 +88,23 @@ class BattleEnvironment(BaseEnvironment):
     description: str = Field(default="Environment for stock market battles")
     state: BattleState = Field(default_factory=BattleState)
     tools: Dict[str, BaseTool] = Field(default_factory=dict)
+    max_steps: int = Field(default=3, description="Maximum steps for each agent")
 
     async def initialize(self) -> None:
         """Initialize the battle environment"""
         await super().initialize()
         self.state = BattleState()
-        logger.info("Battle environment initialized")
+        logger.info(f"Battle environment initialized (max_steps={self.max_steps})")
 
     def register_agent(self, agent: BaseAgent) -> None:
         """Register an agent with battle tools and instructions"""
         super().register_agent(agent)
         agent_id = agent.name
         self.state.active_agents[agent_id] = agent.name
+
+        # Set max_steps for the agent
+        if hasattr(agent, "max_steps"):
+            agent.max_steps = self.max_steps
 
         if isinstance(agent, ToolCallAgent) and hasattr(agent, "available_tools"):
             battle_tool = Battle(agent_id=agent_id)
