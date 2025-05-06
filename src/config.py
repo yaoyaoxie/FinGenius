@@ -1,6 +1,7 @@
 import json
 import threading
 
+
 try:
     import tomllib
 except ImportError:
@@ -92,18 +93,15 @@ class BrowserSettings(BaseModel):
 
 class TTSSettings(BaseModel):
     """配置文本转语音工具"""
+
     appid: str = Field("", description="Volcengine TTS平台应用ID")
     access_token: str = Field("", description="Volcengine TTS访问令牌")
     cluster: str = Field("volcano_tts", description="TTS集群名称")
     host: str = Field("openspeech.bytedance.com", description="API主机地址")
     default_voice_type: str = Field(
-        "zh_male_beijingxiaoye_moon_bigtts", 
-        description="默认语音类型，用于股票结果播报"
+        "zh_male_beijingxiaoye_moon_bigtts", description="默认语音类型，用于股票结果播报"
     )
-    default_output_dir: str = Field(
-        "results", 
-        description="默认音频文件输出目录"
-    )
+    default_output_dir: str = Field("results", description="默认音频文件输出目录")
 
 
 class MCPServerConfig(BaseModel):
@@ -310,7 +308,7 @@ class Config:
     def mcp_config(self) -> MCPSettings:
         """Get the MCP configuration"""
         return self._config.mcp_config
-        
+
     @property
     def tts_config(self) -> TTSSettings:
         """获取TTS配置"""

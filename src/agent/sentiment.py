@@ -5,8 +5,6 @@ from pydantic import Field
 from src.agent.mcp import MCPAgent
 from src.prompt.mcp import NEXT_STEP_PROMPT_ZN
 from src.prompt.sentiment import SENTIMENT_SYSTEM_PROMPT
-
-from src.agent.toolcall import ToolCallAgent
 from src.schema import Message
 from src.tool import Terminate, ToolCollection
 from src.tool.sentiment import SentimentTool
@@ -19,7 +17,7 @@ class SentimentAgent(MCPAgent):
     name: str = "sentiment_agent"
     description: str = "Analyzes market sentiment, news, and social media for insights on stock performance."
     system_prompt: str = SENTIMENT_SYSTEM_PROMPT
-    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
+    next_step_prompt: str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools with proper type annotation
     available_tools: ToolCollection = Field(

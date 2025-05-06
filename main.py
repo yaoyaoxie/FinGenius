@@ -89,7 +89,9 @@ async def announce_result_with_tts(results: Dict[str, Any]):
             # 添加一些关键战斗点
             if battle_result.get("battle_highlights"):
                 tts_text += "关键分析点包括："
-                for i, highlight in enumerate(battle_result["battle_highlights"][:3]):  # 只取前3个要点
+                for i, highlight in enumerate(
+                    battle_result["battle_highlights"][:3]
+                ):  # 只取前3个要点
                     agent = highlight.get("agent", "")
                     point = highlight.get("point", "")
                     tts_text += f"{agent}认为{point}。"
@@ -99,10 +101,7 @@ async def announce_result_with_tts(results: Dict[str, Any]):
         output_file = f"results/{stock_code}_result.mp3"
 
         # 执行TTS转换并播放
-        await tts_tool.execute(
-            text=tts_text,
-            output_file=output_file
-        )
+        await tts_tool.execute(text=tts_text, output_file=output_file)
 
         logger.info(f"结果语音播报已保存至: {output_file}")
 
@@ -111,7 +110,7 @@ async def announce_result_with_tts(results: Dict[str, Any]):
 
 
 def display_results(
-        results: Dict[str, Any], output_format: str = "text", output_file: str = None
+    results: Dict[str, Any], output_format: str = "text", output_file: str = None
 ):
     """Display or save research results."""
     # Handle JSON output
@@ -179,9 +178,7 @@ async def main():
     )
     parser.add_argument("-o", "--output", help="Save results to file")
     parser.add_argument(
-        "--tts",
-        action="store_true",
-        help="Enable text-to-speech for the final result"
+        "--tts", action="store_true", help="Enable text-to-speech for the final result"
     )
 
     args = parser.parse_args()
@@ -194,6 +191,7 @@ async def main():
         if args.tts:
             # 确保results目录存在
             import os
+
             os.makedirs("results", exist_ok=True)
             await announce_result_with_tts(results)
 

@@ -16,7 +16,7 @@ class RiskControlAgent(MCPAgent):
     name: str = "risk_control_agent"
     description: str = "Analyzes financial risks and proposes risk control strategies for stock investments."
     system_prompt: str = RISK_SYSTEM_PROMPT
-    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
+    next_step_prompt: str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools with proper type annotation
     available_tools: ToolCollection = Field(

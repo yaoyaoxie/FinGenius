@@ -5,8 +5,6 @@ from pydantic import Field
 from src.agent.mcp import MCPAgent
 from src.prompt.mcp import NEXT_STEP_PROMPT_ZN
 from src.prompt.technical_analysis import TECHNICAL_ANALYSIS_SYSTEM_PROMPT
-
-from src.agent.toolcall import ToolCallAgent
 from src.schema import Message
 from src.tool import Terminate, ToolCollection
 from src.tool.technical_analysis import TechnicalAnalysisTool
@@ -21,7 +19,7 @@ class TechnicalAnalysisAgent(MCPAgent):
     )
 
     system_prompt: str = TECHNICAL_ANALYSIS_SYSTEM_PROMPT
-    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
+    next_step_prompt: str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools with proper type annotation
     available_tools: ToolCollection = Field(
@@ -52,9 +50,7 @@ class TechnicalAnalysisAgent(MCPAgent):
                     f"你正在对股票 {stock_code} 进行技术面分析。请评估价格走势、图表形态和关键技术指标，形成短中期交易策略。"
                 )
             )
-            request = (
-                f"请分析 {stock_code} 的技术指标和图表形态。"
-            )
+            request = f"请分析 {stock_code} 的技术指标和图表形态。"
 
         # Call parent implementation with the request
         return await super().run(request)

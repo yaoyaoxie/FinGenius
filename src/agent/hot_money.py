@@ -5,7 +5,6 @@ from pydantic import Field
 from src.agent.mcp import MCPAgent
 from src.prompt.hot_money import HOT_MONEY_SYSTEM_PROMPT
 from src.prompt.mcp import NEXT_STEP_PROMPT_ZN
-
 from src.schema import Message
 from src.tool import Terminate, ToolCollection
 from src.tool.hot_money import HotMoneyTool
@@ -20,7 +19,7 @@ class HotMoneyAgent(MCPAgent):
     )
 
     system_prompt: str = HOT_MONEY_SYSTEM_PROMPT
-    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
+    next_step_prompt: str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools with proper type annotation
     available_tools: ToolCollection = Field(
@@ -32,7 +31,7 @@ class HotMoneyAgent(MCPAgent):
     special_tool_names: List[str] = Field(default_factory=lambda: [Terminate().name])
 
     async def run(
-            self, request: Optional[str] = None, stock_code: Optional[str] = None
+        self, request: Optional[str] = None, stock_code: Optional[str] = None
     ) -> Any:
         """Run institutional trading analysis on the given stock.
 

@@ -1,5 +1,5 @@
 from src.mcp.server import MCPServer
-from src.tool import Terminate, Battle
+from src.tool import Battle, Terminate
 
 
 class BattleServer(MCPServer):

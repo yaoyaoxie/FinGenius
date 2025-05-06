@@ -13,7 +13,7 @@ class ReportAgent(MCPAgent):
     name: str = "report_agent"
     description: str = "Generates comprehensive reports by synthesizing insights from other specialized agents."
     system_prompt: str = REPORT_SYSTEM_PROMPT
-    next_step_prompt:str = NEXT_STEP_PROMPT_ZN
+    next_step_prompt: str = NEXT_STEP_PROMPT_ZN
 
     # Initialize with FinGenius tools and proper type annotation
     available_tools: ToolCollection = Field(

@@ -1,8 +1,10 @@
 import logging
 import sys
+
 from src.mcp.server import MCPServer
 from src.tool import Terminate
 from src.tool.hot_money import HotMoneyTool
+
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
 

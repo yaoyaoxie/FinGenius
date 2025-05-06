@@ -45,9 +45,9 @@ Think step by step about the problem and identify which MCP tool would be most h
 If you've already made progress, consider what additional information you need or what actions would move you closer to completing the task.
 """
 
-NEXT_STEP_PROMPT_ZN = """根据当前状态和可用的 Tools，接下来应该做什么？ 
-逐步思考问题，并确定在当前阶段最有帮助的 MCP tool。 
-如果你已经有所进展，考虑你需要哪些额外信息或哪些行动可以帮助你更接近完成任务。 
+NEXT_STEP_PROMPT_ZN = """根据当前状态和可用的 Tools，接下来应该做什么？
+逐步思考问题，并确定在当前阶段最有帮助的 MCP tool。
+如果你已经有所进展，考虑你需要哪些额外信息或哪些行动可以帮助你更接近完成任务。
 """
 
 # Additional specialized prompts

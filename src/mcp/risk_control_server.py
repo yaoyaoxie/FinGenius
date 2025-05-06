@@ -15,4 +15,4 @@ class SentimentServer(MCPServer):
                 "web_search": WebSearch(),
                 "terminate": Terminate(),
             }
-        )    
+        )

@@ -1,17 +1,17 @@
 import base64
-import os
-from pathlib import Path
-from typing import List, Optional, Dict, Any, ClassVar
 import json
 import uuid
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 import requests
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
+from src.config import config
 from src.logger import logger
 from src.tool.base import BaseTool, ToolResult
-from src.config import config
+
 
 _TTS_DESCRIPTION = """Text-to-Speech tool that converts text to audio using Volcengine TTS API.
 Call this tool to generate speech from text."""
@@ -19,11 +19,18 @@ Call this tool to generate speech from text."""
 
 class TTSRequest(BaseModel):
     """Request model for TTS API"""
+
     text: str = Field(..., description="Text to convert to speech")
     encoding: str = Field("mp3", description="Audio encoding format")
-    speed_ratio: float = Field(1.0, description="Speech speed ratio (0.5-2.0)", ge=0.5, le=2.0)
-    volume_ratio: float = Field(1.0, description="Speech volume ratio (0.5-2.0)", ge=0.5, le=2.0)
-    pitch_ratio: float = Field(1.0, description="Speech pitch ratio (0.5-2.0)", ge=0.5, le=2.0)
+    speed_ratio: float = Field(
+        1.0, description="Speech speed ratio (0.5-2.0)", ge=0.5, le=2.0
+    )
+    volume_ratio: float = Field(
+        1.0, description="Speech volume ratio (0.5-2.0)", ge=0.5, le=2.0
+    )
+    pitch_ratio: float = Field(
+        1.0, description="Speech pitch ratio (0.5-2.0)", ge=0.5, le=2.0
+    )
     text_type: str = Field("plain", description="Text type (plain or ssml)")
     with_frontend: int = Field(1, description="Whether to use frontend processing")
     frontend_type: str = Field("unitTson", description="Frontend type")
@@ -32,6 +39,7 @@ class TTSRequest(BaseModel):
 
 class VoiceType(str, Enum):
     """Voice types available for TTS"""
+
     BEIJING_MALE = "zh_male_beijingxiaoye_moon_bigtts"
     FEMALE_CHUANMEI = "zh_female_daimengchuanmei_moon_bigtts"
     FEMALE_SAJIAO = "zh_female_sajiaonvyou_moon_bigtts"
@@ -40,6 +48,7 @@ class VoiceType(str, Enum):
 
 class TTSResponse(BaseModel):
     """Response model for TTS operation"""
+
     success: bool = Field(..., description="Whether the TTS operation was successful")
     response: Optional[Dict[str, Any]] = Field(None, description="Raw API response")
     audio_data: Optional[str] = Field(None, description="Base64 encoded audio data")
@@ -52,12 +61,12 @@ class TTS:
     """
 
     def __init__(
-            self,
-            appid: str,
-            access_token: str,
-            cluster: str = "volcano_tts",
-            voice_type: str = "BV700_V2_streaming",
-            host: str = "openspeech.bytedance.com",
+        self,
+        appid: str,
+        access_token: str,
+        cluster: str = "volcano_tts",
+        voice_type: str = "BV700_V2_streaming",
+        host: str = "openspeech.bytedance.com",
     ):
         """
         Initialize the volcengine TTS client.
@@ -97,7 +106,7 @@ class TTS:
         """
         # Create request model
         request = TTSRequest(**kwargs)
-        
+
         request_json = {
             "app": {
                 "appid": self.appid,
@@ -206,31 +215,40 @@ class TTSTool(BaseTool):
             # 直接获取参数，无需使用TTSToolConfig
             text = kwargs.get("text")
             voice_type = kwargs.get("voice_type", self._tts_config.default_voice_type)
-            
+
             # 构建输出文件路径
             output_file = kwargs.get("output_file")
             if not output_file:
                 # 生成默认输出文件名
                 filename = f"tts_{uuid.uuid4().hex[:8]}.mp3"
                 output_file = str(Path(self._tts_config.default_output_dir) / filename)
-                
+
             speed_ratio = kwargs.get("speed_ratio", 1.0)
             volume_ratio = kwargs.get("volume_ratio", 1.0)
             pitch_ratio = kwargs.get("pitch_ratio", 1.0)
-            
+
             # 参数验证
             if not text:
                 return ToolResult(error="Text parameter is required")
-            
-            if not isinstance(speed_ratio, (int, float)) or not 0.5 <= speed_ratio <= 2.0:
+
+            if (
+                not isinstance(speed_ratio, (int, float))
+                or not 0.5 <= speed_ratio <= 2.0
+            ):
                 return ToolResult(error="Speed ratio must be between 0.5 and 2.0")
-                
-            if not isinstance(volume_ratio, (int, float)) or not 0.5 <= volume_ratio <= 2.0:
+
+            if (
+                not isinstance(volume_ratio, (int, float))
+                or not 0.5 <= volume_ratio <= 2.0
+            ):
                 return ToolResult(error="Volume ratio must be between 0.5 and 2.0")
-                
-            if not isinstance(pitch_ratio, (int, float)) or not 0.5 <= pitch_ratio <= 2.0:
+
+            if (
+                not isinstance(pitch_ratio, (int, float))
+                or not 0.5 <= pitch_ratio <= 2.0
+            ):
                 return ToolResult(error="Pitch ratio must be between 0.5 and 2.0")
-            
+
             # Initialize TTS client
             tts_client = TTS(
                 appid=self._tts_config.appid,
@@ -249,7 +267,9 @@ class TTSTool(BaseTool):
             )
 
             if not result.success:
-                return ToolResult(error=f"Text-to-speech conversion failed: {result.error}")
+                return ToolResult(
+                    error=f"Text-to-speech conversion failed: {result.error}"
+                )
 
             # Save the audio data to a file
             audio_data = base64.b64decode(result.audio_data)
@@ -276,25 +296,31 @@ class TTSTool(BaseTool):
         """Play the audio file using platform-specific methods"""
         try:
             import platform
+
             system = platform.system()
 
             if system == "Windows":
                 import winsound
+
                 winsound.PlaySound(audio_file, winsound.SND_FILENAME)
             elif system == "Darwin":  # macOS
                 import subprocess
+
                 subprocess.run(["afplay", audio_file])
             else:  # Linux and others
                 import subprocess
+
                 players = ["mpg123", "play"]
-                
+
                 for player in players:
                     try:
                         subprocess.run([player, audio_file], check=False)
                         return  # Successfully played the audio
                     except FileNotFoundError:
                         continue
-                
-                logger.warning(f"Could not play audio: No suitable player found. Audio saved to {audio_file}")
+
+                logger.warning(
+                    f"Could not play audio: No suitable player found. Audio saved to {audio_file}"
+                )
         except Exception as e:
             logger.error(f"Error playing audio: {str(e)}")
