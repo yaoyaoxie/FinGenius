@@ -27,7 +27,7 @@ FinGenius 是一个开源的智能金融分析平台，采用 **Research–Battl
 - 移动应用：目前已上架荣耀、小米、Vivo应用市场（华为、Apple上架流程较长，正在审核中）
 - 免费早鸟体验名额：扫码关注FinGenius服务号，限量前8000位。
 
-![微信公众号二维码](docs/wechat.PNG)
+![微信公众号二维码](docs/wechat.JPG)
 
 让我们携手完善[FinGenius](https://fingenius.cn)，共同探索金融智能分析的技术前沿！🌟
 
