@@ -1,4 +1,4 @@
-<h1 align="center">FinGenius - 金融博弈智能体</h1>
+<h1 align="center">FinGenius - 首个A股博弈多智能体应用</h1>
 
 <div align="center">
 <img src="docs/logo.png" alt="logo" width="200">
