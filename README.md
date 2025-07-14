@@ -57,7 +57,9 @@
 
 ![微信公众号二维码](docs/wechat.JPG)
 
-FinGenius俱乐部，欢迎对AI金融极致热爱的你，携手完善[FinGenius](https://fingenius.cn)，共同探索金融智能分析的技术前沿！🌟
+**FinGenius俱乐部**
+欢迎对AI金融极致热爱的你
+携手完善[FinGenius](https://fingenius.cn)，共同探索金融智能分析的技术前沿边界！🌟
 
 
 ## 安装指南
