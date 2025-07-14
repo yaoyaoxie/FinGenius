@@ -5,7 +5,7 @@
 </div>
 
 <p align="center">
-<img src="https://img.shields.io/badge/License-Apache%202.0-yellow.svg?style=flat-square" alt="License">
+<img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square" alt="License">
 <img src="https://img.shields.io/badge/Python-3.12%2B-blue.svg?style=flat-square&logo=python" alt="Python">
 <img src="https://img.shields.io/github/stars/huayaoyuanjin/FinGenius" alt="Stars">
 <a href="https://fingenius.cn"><img src="https://img.shields.io/badge/Website-fingenius.cn-purple.svg?style=flat-square" alt="Website"></a>
@@ -423,7 +423,7 @@ sequenceDiagram
 
 ## 许可证
 
-FinGenius 使用 [Apache 2.0 许可证](LICENSE)。
+FinGenius 使用 [GPL v3 许可证](LICENSE)。
 
 ## 致谢
 
