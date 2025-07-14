@@ -6,7 +6,7 @@ import efinance as ef
 import pandas as pd
 from pydantic import Field
 
-from src.tool.base import BaseTool, ToolResult
+from src.tool.base import BaseTool, ToolResult, get_recent_trading_day
 
 
 class StockInfoResponse(ToolResult):
@@ -52,7 +52,7 @@ class StockInfoRequest(BaseTool):
         for attempt in range(1, self.MAX_RETRIES + 1):
             try:
                 # Get current trading day
-                trading_day = datetime.datetime.now().strftime("%Y-%m-%d")
+                trading_day = get_recent_trading_day()
 
                 # Fetch stock information
                 data = ef.stock.get_base_info(stock_code)

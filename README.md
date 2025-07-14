@@ -13,21 +13,24 @@
 
 ## 项目简介
 
-FinGenius 是一个开源的智能金融分析平台，采用 **Research–Battle 双子星环境多智能体架构**，融合大语言模型与专业金融工具（基于 MCP 协议）， 通过多个专业的 AI 金融分析师的协作研究与博弈对抗，深度提供上市公司的多角度和多维度的分析。
+FinGenius 是一个开源的智能金融分析平台，采用 **Research–Battle 双子星环境多智能体架构**，融合大语言模型与专业金融工具（基于 MCP 协议）。通过6位专业AI分析师的协作研究与结构化多轮辩论博弈，实现完整上下文传递和累积观点讨论，深度提供上市公司的多角度和多维度的分析。
 
 > 本项目仅供学习和研究，不构成任何投资建议。投资有风险，入市需谨慎。
 
 ![architecture](docs%2Farchitecture.png)
 
-## APP体验
+## APP体验(目前是开放免费早鸟体验名额)
 
 我们诚挚邀请您体验，团队6年的心血，FinGenius移动应用：
 
-- 上架时间：本月底将正式登陆各大应用市场
-- 支持平台：安卓应用商店、iOS App Store
 - 特色功能：史上第一款，数学博弈魔法，革新A股体验场景。
+- 移动应用：目前已上架荣耀、小米、Vivo应用市场（华为、Apple上架流程较长，正在审核中）
+- 免费早鸟体验名额：扫码关注FinGenius服务号，限量前8000位。
+
+![微信公众号二维码](docs/wechat.PNG)
 
 让我们携手完善[FinGenius](https://fingenius.cn)，共同探索金融智能分析的技术前沿！🌟
+
 
 ## 安装指南
 
@@ -121,16 +124,42 @@ FinGenius 需要配置使用的 LLM API，请按以下步骤设置：
 python main.py 股票代码
 ```
 
+### 使用示例
+
+```bash
+# 基础分析
+python main.py 000001
+
+# 启用文本转语音
+python main.py 000001 --tts
+
+# 设置3轮辩论
+python main.py 000001 --debate-rounds 3
+
+# 自定义输出格式并保存到文件
+python main.py 000001 --format json --output analysis_report.json
+```
+
 ### 可选参数
 
 - `-f, --format` - 输出格式（text 或 json）
 - `-o, --output` - 将结果保存到文件
 - `--tts` - 启用文本转语音播报最终结果
 - `--max-steps` - 每个智能体的最大步数（默认: 3）
+- `--debate-rounds` - Battle环境辩论轮数（默认: 2）
 
 ## 项目结构
 
-FinGenius 的系统架构以分层解耦与模块化协同为核心，通过明确的接口规范，构建了一个既健壮稳定又易于扩展的智能分析平台。为更直观地展示其内部结构与运作逻辑，以下类图和流程图分别从静态类组织和动态执行流程两个维度进行呈现。
+FinGenius 的系统架构以分层解耦与模块化协同为核心，通过明确的接口规范，构建了一个既健壮稳定又易于扩展的智能分析平台。
+
+**核心特性：**
+- **Research环境**：多智能体协作深度分析，6位专业AI分析师并行/顺序分析（可配置）
+- **Battle环境**：结构化多轮辩论系统，支持可配置轮数的顺序发言和投票决策
+- **完整上下文传递**：Research所有分析结果完整传递给Battle环境的每位专家
+- **累积辩论机制**：每位发言者都能获得前面所有专家的观点，形成递进式深度讨论
+- **状态保持**：确保分析链路的完整性和上下文连贯性
+
+为更直观地展示其内部结构与运作逻辑，以下类图和流程图分别从静态类组织和动态执行流程两个维度进行呈现。
 
 ### 类图
 
@@ -242,18 +271,27 @@ classDiagram
         - vote_results: Dict~str,int~
         - battle_highlights: List~Dict~str,Any~~
         - battle_over: bool
+        - agent_order: List~str~
+        - debate_history: List~Dict~str,Any~~
+        - current_round: int
+        - current_speaker_index: int
         + add_event(type, agent_id, ...) Dict~str,Any~
         + record_vote(agent_id,vote) None
         + mark_terminated(agent_id,reason) None
     }
     class BattleEnvironment {
         - state: BattleState
+        - debate_rounds: int
         - tools: Dict~str,BaseTool~
         + initialize() None
         + register_agent(agent: BaseAgent) None
         + run(report: Dict~str,Any~) Dict~str,Any~
         + handle_speak(agent_id, content) ToolResult
         + handle_vote(agent_id, vote) ToolResult
+        + _run_structured_debate() None
+        + _build_debate_context(agent_id) str
+        + _broadcast_speech(agent_id, content) None
+        + _run_final_voting() None
         + cleanup() None
     }
     class EnvironmentFactory {
@@ -300,7 +338,7 @@ classDiagram
 ### 流程图
 ```mermaid
 sequenceDiagram
-    %% 简化版 FinGenius 执行流程（Agent Team）
+    %% FinGenius 双环境执行流程（Research-Battle）
     participant User
     participant Main
     participant Env as Environment
@@ -309,7 +347,7 @@ sequenceDiagram
 
     %% 用户发起股票研究
     User->>Main: run(stock_code)
-    Main->>Env: create & run(stock_code)
+    Main->>Env: create Research & run(stock_code)
 
     %% 研究阶段：Agent Team 循环分析并调用工具
     Env->>Agents: analyze(stock_code)
@@ -321,19 +359,26 @@ sequenceDiagram
     Agents-->>Env: analysis result
     Env-->>Main: research results
 
-    %% 博弈阶段：Agent Team 重置状态并循环参与
+    %% 博弈阶段：Agent Team 保持研究状态进行结构化辩论
     Main->>Env: run battle with research results
-    Env->>Agents: reset & run battle
-    loop 博弈循环
-        Agents->>Agents: step()/think()/act()
-        Agents->>Tool: call battle tool
-        Tool-->>Agents: 返回结果
+    Env->>Agents: 传递完整研究分析结果（所有6位专家的详细分析）
+    loop 多轮辩论循环 (默认2轮)
+        loop 单轮发言 (按顺序)
+            Note over Env,Agents: 累积上下文传递：当前发言者获得<br/>研究结果+前面所有发言者观点
+            Env->>Agents: 发送累积辩论上下文
+            Agents->>Agents: step()/think()/act()
+            Agents->>Tool: call battle tool
+            Tool-->>Agents: 返回结果
+            Agents-->>Env: 发言内容
+            Env->>Agents: 广播发言给其他智能体
+        end
     end
-    Agents-->>Env: battle result
-    Env-->>Main: final decision
+    Env->>Agents: 进行最终投票
+    Agents-->>Env: 投票结果
+    Env-->>Main: 辩论结果和最终决策
 
     %% 输出最终结果
-    Main-->>User: display results
+    Main-->>User: 显示研究报告和辩论结果
 ```
 
 ## 许可证

@@ -94,6 +94,11 @@ class ToolCallAgent(ReActAgent):
         logger.info(
             f"🛠️ {self.name} selected {len(tool_calls) if tool_calls else 0} tools to use"
         )
+        
+        # Show agent thinking in terminal if content exists
+        if content and content.strip():
+            from src.console import visualizer
+            visualizer.show_agent_thought(self.name, content, "analysis")
         if tool_calls:
             logger.info(
                 f"🧰 Tools being prepared: {[call.function.name for call in tool_calls]}"

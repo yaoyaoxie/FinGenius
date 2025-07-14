@@ -1,6 +1,8 @@
 # Global LLM configuration
+# 模型越好，生成的效果越好，建议使用最好的模型。
 [llm]
-model = "claude-3-7-sonnet-20250219"        # The LLM model to use
+api_type = "openai"  # 添加API类型，使用OpenAI兼容的API
+model = "claude-3-7-sonnet-20250219"        # The LLM model to use, better use tool supported model
 base_url = "https://api.anthropic.com/v1/"  # API endpoint URL
 api_key = "YOUR_API_KEY"                    # Your API key
 max_tokens = 8192                           # Maximum number of tokens in the response
@@ -14,6 +16,7 @@ temperature = 0.0                           # Controls randomness
 # max_tokens = 8096
 # temperature = 0.0
 # api_version="AZURE API VERSION" #"2024-08-01-preview"
+
 
 # [llm] #OLLAMA:
 # api_type = 'ollama'
@@ -40,6 +43,11 @@ temperature = 0.0                           # Controls randomness for vision mod
 # temperature = 0.0
 
 # Optional configuration, Search settings.
-# [search]
-# Search engine for agent to use. Default is "Google", can be set to "Baidu" or "DuckDuckGo".
-#engine = "Google"
+[search]
+# Search engine for agent to use. Default is "Google", can be set to "Baidu" or "DuckDuckGo" or "Bing"
+# 对于国内用户，建议使用以下搜索引擎优先级：
+# Baidu（百度）- 国内访问最稳定
+# Bing（必应）- 国际化且国内可用
+# Google - 作为备选（需要良好的国际网络）
+# DuckDuckGo - 作为备选（需要良好的国际网络）
+engine = "Bing"

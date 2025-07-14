@@ -29,6 +29,7 @@ class ToolCollection:
         if not tool:
             return ToolFailure(error=f"Tool {name} is invalid")
         try:
+            tool_input = tool_input or {}
             result = await tool(**tool_input)
             return result
         except ToolError as e:

@@ -8,7 +8,7 @@ import pandas as pd
 from pydantic import Field
 
 from src.logger import logger
-from src.tool.base import BaseTool, ToolResult
+from src.tool.base import BaseTool, ToolResult, get_recent_trading_day
 from src.tool.financial_deep_search.get_section_data import get_all_section
 from src.tool.financial_deep_search.index_capital import get_index_capital_flow
 from src.tool.financial_deep_search.stock_capital import get_stock_capital_flow
@@ -97,7 +97,7 @@ class HotMoneyTool(BaseTool):
         """
         async with self.lock:
             try:
-                date = date or datetime.now().strftime("%Y-%m-%d")
+                date = date or get_recent_trading_day()
                 actual_index_code = index_code or stock_code
 
                 result = {

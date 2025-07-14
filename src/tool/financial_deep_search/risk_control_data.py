@@ -113,54 +113,49 @@ def get_eastmoney_announcement_detail(art_code, max_retries=3, retry_delay=2):
 
 
 def get_announcements_with_detail(stock_code, max_count=30):
-    """爬取指定股票的公告及详情"""
+    """获取指定股票公告的标题列表, 只保留标题, 并限制至最多50条"""
+    # 强制限制 max_count 不超过 10
+    max_count = min(max_count, 10)
+
     try:
-        anns = get_eastmoney_announcements(stock_code)
+        # 只抓取第一页公告，page_size 同步为 max_count 以减少无用数据
+        anns = get_eastmoney_announcements(stock_code, page_size=max_count)
         result = []
 
-        for i, ann in enumerate(anns):
-            if i >= max_count:
-                break
-
+        for i, ann in enumerate(anns[:max_count]):
             art_code = ann.get("art_code")
             title = ann.get("title")
             notice_date = ann.get("notice_date", "").split("T")[0]
-            pdf_url = (
-                f"http://pdf.dfcfw.com/pdf/H2_{art_code}_1.pdf" if art_code else None
-            )
 
-            print(f"[{i + 1}] {title} {notice_date} art_code={art_code}")
-            detail = get_eastmoney_announcement_detail(art_code) if art_code else None
+            # 获取公告正文并截断至前 1000 字，避免超长文本导致上下文溢出
+            content = ""
+            if art_code:
+                detail = get_eastmoney_announcement_detail(art_code)
+                if isinstance(detail, str):
+                    content = detail[:1000]
+                elif isinstance(detail, dict):
+                    raw_content = detail.get("content") or detail.get("notice_content") or ""
+                    content = raw_content[:1000]
 
-            # 优先取 content，没有则取 notice_content
-            if isinstance(detail, dict):
-                notice_content = detail.get("content") or detail.get("notice_content")
-                attach_url = None
-                attach_list = detail.get("attach_list") or []
-                if attach_list and isinstance(attach_list, list):
-                    attach_url = attach_list[0].get("attach_url")
-            else:
-                notice_content = detail if isinstance(detail, str) else None
-                attach_url = None
+            # 打印简单调试信息
+            print(f"[{i + 1}] {title} {notice_date}")
 
+            # 汇总结果：标题 + 日期 + 截断后的正文(≤1000 字)
             result.append(
                 {
                     "title": title,
                     "date": notice_date,
-                    "pdf_url": pdf_url,
-                    "art_code": art_code,
-                    "notice_content": notice_content,
-                    "attach_url": attach_url,
+                    "content": content,
                 }
             )
 
-            # 请求间隔，防止频率过高
-            time.sleep(0.5)
+            # 适当休眠，避免过快请求被限速
+            time.sleep(0.3)
 
         return result
 
     except Exception as e:
-        print(f"获取公告详情失败: {e}")
+        print(f"获取公告标题失败: {e}")
         print(traceback.format_exc())
         return []
 
@@ -413,7 +408,11 @@ def get_risk_control_data(
             if include_financial:
                 financial_data = get_financial_reports(stock_code, period)
             # 直接返回拼接的json结构
-            return {"financial": financial_data, "legal": legal_data}
+            # 仅保留 financial 元数据，减少返回体大小，且保证 legal 字段先出现，避免被截断
+            financial_meta = (
+                financial_data.get("元数据", {}) if isinstance(financial_data, dict) else {}
+            )
+            return {"legal": legal_data, "financial_meta": financial_meta}
         except Exception as e:
             last_exception = str(e)
             print(f"[第{attempt}次] 获取风控数据失败: {e}")

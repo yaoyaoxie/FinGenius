@@ -3,15 +3,17 @@ from typing import Any, Dict
 
 from pydantic import Field
 
+from src.agent.chip_analysis import ChipAnalysisAgent
 from src.agent.hot_money import HotMoneyAgent
-from src.agent.report import ReportAgent
 from src.agent.risk_control import RiskControlAgent
 from src.agent.sentiment import SentimentAgent
 from src.agent.technical_analysis import TechnicalAnalysisAgent
+from src.agent.big_deal_analysis import BigDealAnalysisAgent
 from src.environment.base import BaseEnvironment
 from src.logger import logger
 from src.schema import Message
 from src.tool.stock_info_request import StockInfoRequest
+from src.utils.report_manager import report_manager
 
 
 class ResearchEnvironment(BaseEnvironment):
@@ -29,6 +31,8 @@ class ResearchEnvironment(BaseEnvironment):
             "risk_control_agent": "risk",
             "hot_money_agent": "hot_money",
             "technical_analysis_agent": "technical",
+            "chip_analysis_agent": "chip_analysis",
+            "big_deal_analysis_agent": "big_deal",
         }
     )
 
@@ -42,14 +46,15 @@ class ResearchEnvironment(BaseEnvironment):
             "risk_control_agent": await RiskControlAgent.create(max_steps=self.max_steps),
             "hot_money_agent": await HotMoneyAgent.create(max_steps=self.max_steps),
             "technical_analysis_agent": await TechnicalAnalysisAgent.create(max_steps=self.max_steps),
-            "report_agent": await ReportAgent.create(max_steps=self.max_steps),
+            "chip_analysis_agent": await ChipAnalysisAgent.create(max_steps=self.max_steps),
+            "big_deal_analysis_agent": await BigDealAnalysisAgent.create(max_steps=self.max_steps),
         }
 
         # Register all agents
         for agent in specialized_agents.values():
             self.register_agent(agent)
 
-        logger.info(f"Research environment initialized with specialized agents (max_steps={self.max_steps})")
+        logger.info(f"Research environment initialized with 6 specialist agents (max_steps={self.max_steps})")
 
     async def run(self, stock_code: str) -> Dict[str, Any]:
         """Run research on the given stock code using all specialist agents."""
@@ -78,52 +83,61 @@ class ResearchEnvironment(BaseEnvironment):
                         )
                         logger.info(f"Added basic stock info to {agent_key}'s context")
 
-            # Run analysis tasks concurrently for each specialist agent
-            tasks = {
-                result_key: self.agents[agent_key].run(stock_code)
-                for agent_key, result_key in self.analysis_mapping.items()
-                if agent_key in self.agents
-            }
+            # Run analysis tasks sequentially with 3-second intervals
+            results = {}
+            agent_count = 0
+            total_agents = len([k for k in self.analysis_mapping.keys() if k in self.agents])
+            
+            # Import visualizer for progress display
+            try:
+                from src.console import visualizer
+                show_visual = True
+            except:
+                show_visual = False
+            
+            for agent_key, result_key in self.analysis_mapping.items():
+                if agent_key not in self.agents:
+                    continue
+                    
+                agent_count += 1
+                logger.info(f"🔄 Starting analysis with {agent_key} ({agent_count}/{total_agents})")
+                
+                # Show agent starting in terminal
+                if show_visual:
+                    visualizer.show_agent_starting(agent_key, agent_count, total_agents)
+                
+                try:
+                    # Run individual agent
+                    result = await self.agents[agent_key].run(stock_code)
+                    results[result_key] = result
+                    logger.info(f"✅ Completed analysis with {agent_key}")
+                    
+                    # Show agent completion in terminal
+                    if show_visual:
+                        visualizer.show_agent_completed(agent_key, agent_count, total_agents)
+                    
+                    # Wait 3 seconds before next agent (except for the last one)
+                    if agent_count < total_agents:
+                        logger.info(f"⏳ Waiting 3 seconds before next agent...")
+                        if show_visual:
+                            visualizer.show_waiting_next_agent(3)
+                        await asyncio.sleep(3)
+                        
+                except Exception as e:
+                    logger.error(f"❌ Error with {agent_key}: {str(e)}")
+                    results[result_key] = f"Error: {str(e)}"
 
-            if not tasks:
+            if not results:
                 return {
-                    "error": "No specialist agents available",
+                    "error": "No specialist agents completed successfully",
                     "stock_code": stock_code,
                 }
-
-            results = dict(zip(tasks.keys(), await asyncio.gather(*tasks.values())))
 
             # 添加基本信息到结果中
             if not basic_info_result.error:
                 results["basic_info"] = basic_info_result.output
 
-            # Prepare summary for report agent
-            summary = "\n\n".join(
-                [
-                    f"金融专家对{stock_code}的研究结果如下：",
-                    f"情感分析：{results.get('sentiment', '暂无数据')}",
-                    f"风险分析：{results.get('risk', '暂无数据')}",
-                    f"游资分析：{results.get('hot_money', '暂无数据')}",
-                    f"技术面分析：{results.get('technical', '暂无数据')}",
-                ]
-            )
-
-            # Generate final report
-            report_agent = self.get_agent("report_agent")
-            if report_agent:
-                # 也将股票基本信息添加到报告agent的上下文中
-                if not basic_info_result.error:
-                    report_agent.memory.add_message(
-                        Message.system_message(stock_info_message)
-                    )
-
-                report_agent.memory.add_message(Message.system_message(summary))
-                report = await report_agent.run(
-                    request=f"基于专家研究结果为股票{stock_code}生成一份综合报告"
-                )
-                results["report"] = report
-
-            # Store and return complete results
+            # Store and return complete results (without generating report here)
             self.results = {**results, "stock_code": stock_code}
             return self.results
 

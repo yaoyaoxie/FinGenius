@@ -632,6 +632,10 @@ class LLM:
                     if not isinstance(tool, dict) or "type" not in tool:
                         raise ValueError("Each tool must be a dict with 'type' field")
 
+            # 对部分第三方代理（如 OpenRouter / Infini）暂不支持 tool_choice="auto"，自动降级
+            if tool_choice == ToolChoice.AUTO and any(keyword in self.base_url.lower() for keyword in ["openrouter", "infini"]):
+                tool_choice = ToolChoice.NONE  # type: ignore
+
             # Set up the completion request
             params = {
                 "model": self.model,

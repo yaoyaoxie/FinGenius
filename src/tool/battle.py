@@ -26,7 +26,7 @@ class Battle(BaseTool):
         "required": ["vote", "speak"],
     }
 
-    agent_id: str = Field(default="")
+    agent_id: str = Field(..., description="The ID of the agent using this tool")
     controller: Optional[Any] = Field(default=None)
 
     async def execute(

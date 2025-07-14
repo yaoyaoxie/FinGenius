@@ -22,8 +22,8 @@ class RiskControlTool(BaseTool):
             },
             "max_count": {
                 "type": "integer",
-                "description": "公告数据获取数量上限，范围10-200，用于限制返回的法律公告数量",
-                "default": 100,
+                "description": "公告数据获取数量上限，建议不超过10，用于限制返回的法律公告数量",
+                "default": 10,
             },
             "period": {
                 "type": "string",
@@ -47,7 +47,7 @@ class RiskControlTool(BaseTool):
     async def execute(
         self,
         stock_code: str,
-        max_count: int = 100,
+        max_count: int = 10,
         period: str = "按年度",
         max_retry: int = 3,
         sleep_seconds: int = 1,

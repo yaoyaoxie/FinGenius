@@ -1,7 +1,9 @@
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from loguru import logger as _logger
+from rich.logging import RichHandler
 
 from src.config import PROJECT_ROOT
 
@@ -21,12 +23,22 @@ def define_log_level(print_level="INFO", logfile_level="DEBUG", name: str = None
     )  # name a log with prefix name
 
     _logger.remove()
-    _logger.add(sys.stderr, level=print_level)
+    
+    # Only write to file by default
     _logger.add(PROJECT_ROOT / f"logs/{log_name}.log", level=logfile_level)
+    
+    # Add terminal handler only if explicitly requested
+    if print_level != "OFF":
+        _logger.add(
+            RichHandler(rich_tracebacks=True, markup=True, show_time=False, show_path=False),
+            level=print_level,
+            format="<level>{message}</level>",
+        )
+    
     return _logger
 
 
-logger = define_log_level()
+logger = define_log_level(print_level="OFF")  # Default to file-only logging
 
 
 if __name__ == "__main__":

@@ -2,6 +2,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
+import time
+import logging
+from datetime import datetime
+from typing import Optional, Dict, Any
 
 
 class BaseTool(ABC, BaseModel):
@@ -78,3 +82,28 @@ class CLIResult(ToolResult):
 
 class ToolFailure(ToolResult):
     """A ToolResult that represents a failure."""
+
+
+def get_recent_trading_day(date_format: str = "%Y-%m-%d") -> str:
+    """
+    获取最近的交易日（跳过周末）
+    
+    A股交易日规则：
+    - 周一到周五是交易日
+    - 周六周日是休市
+    
+    Args:
+        date_format: 返回日期格式，默认为"%Y-%m-%d"
+        
+    Returns:
+        str: 最近的交易日日期字符串
+    """
+    from datetime import datetime, timedelta
+    
+    current_date = datetime.now()
+    
+    # 如果是周末，则回退到最近的交易日
+    while current_date.weekday() >= 5:  # 周六=5, 周日=6
+        current_date -= timedelta(days=1)
+    
+    return current_date.strftime(date_format)
