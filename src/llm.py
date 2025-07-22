@@ -20,6 +20,7 @@ from tenacity import (
 from src.config import LLMSettings, config
 from src.exceptions import TokenLimitExceeded
 from src.logger import logger  # Assuming a logger is set up in your app
+from src.ollama_client import OllamaAsyncOpenAI
 from src.schema import (
     ROLE_VALUES,
     TOOL_CHOICE_TYPE,
@@ -215,6 +216,15 @@ class LLM:
                     api_key=self.api_key,
                     api_version=self.api_version,
                 )
+            elif self.api_type == "ollama":
+                # For Ollama, we need to handle it differently
+                # Use our custom OllamaAsyncOpenAI client to prevent URL modification
+                logger.info(f"Initializing Ollama client with base_url: {self.base_url}")
+                self.client = OllamaAsyncOpenAI(
+                    base_url=self.base_url,
+                    api_key=self.api_key,  # Ollama ignores this but OpenAI client requires it
+                )
+                logger.info(f"Ollama client initialized successfully")
             else:
                 self.client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
 
@@ -364,6 +374,13 @@ class LLM:
             if not stream:
                 # Non-streaming request
                 params["stream"] = False
+                
+                # Debug logging for Ollama
+                if self.api_type == "ollama":
+                    logger.info(f"Making non-streaming request to Ollama:")
+                    logger.info(f"  - Base URL: {self.base_url}")
+                    logger.info(f"  - Model: {self.model}")
+                    logger.info(f"  - Client base_url: {getattr(self.client, '_base_url', 'Unknown')}")
 
                 response = await self.client.chat.completions.create(**params)
 
@@ -379,6 +396,14 @@ class LLM:
             self.update_token_count(input_tokens)
 
             params["stream"] = True
+            
+            # Debug logging for Ollama streaming
+            if self.api_type == "ollama":
+                logger.info(f"Making streaming request to Ollama:")
+                logger.info(f"  - Base URL: {self.base_url}")
+                logger.info(f"  - Model: {self.model}")
+                logger.info(f"  - Client base_url: {getattr(self.client, '_base_url', 'Unknown')}")
+                
             response = await self.client.chat.completions.create(**params)
 
             collected_messages = []
