@@ -300,24 +300,98 @@ class CreateHtmlTool(BaseTool):
         # Return full response if no clear HTML markers found
         return self._fix_encoding(response)
     
-    def _inject_data_into_html(self, html_content: str, data: Optional[Dict[str, Any]] = None) -> str:
-        """Inject actual data into the HTML template"""
-        if not data:
-            return html_content
-        
+    def _sanitize_data_for_js(self, data: Any) -> Any:
+        """Recursively sanitize data to prevent JavaScript injection issues"""
+        if isinstance(data, dict):
+            return {k: self._sanitize_data_for_js(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self._sanitize_data_for_js(item) for item in data]
+        elif isinstance(data, str):
+            # Clean up problematic characters and content
+            sanitized = data.replace('\n', ' ').replace('\r', ' ')
+            sanitized = sanitized.replace('"', '\"').replace("'", "\'") 
+            # Truncate extremely long strings that might contain raw content
+            if len(sanitized) > 1000:
+                sanitized = sanitized[:997] + "..."
+            return sanitized
+        else:
+            return data
+    
+    def _inject_data_into_html(self, html_content: str, data: Dict[str, Any]) -> str:
+        """Inject data into HTML template with enhanced duplicate prevention"""
         try:
-            # 确保数据格式正确
-            safe_data = json.dumps(data, ensure_ascii=False, indent=2)
+            import json
+            # Sanitize data first to prevent injection issues
+            sanitized_data = self._sanitize_data_for_js(data)
+            # Properly serialize data with safe escaping for JavaScript injection
+            safe_data = json.dumps(sanitized_data, ensure_ascii=True, indent=2, separators=(',', ': '))
+            injection_success = False
             
-            # 查找数据注入点并替换
-            if "window.pageData = {};" in html_content:
-                html_content = html_content.replace(
-                    "window.pageData = {};",
-                    f"window.pageData = {safe_data};"
-                )
-                logger.info("Successfully injected data into HTML")
+            # 首先检查是否已经存在reportData变量声明
+            existing_patterns = [
+                r'let\s+reportData\s*=',
+                r'const\s+reportData\s*=', 
+                r'var\s+reportData\s*=',
+                r'window\.pageData\s*='
+            ]
+            
+            has_existing_data = any(re.search(pattern, html_content, re.IGNORECASE) for pattern in existing_patterns)
+            
+            if has_existing_data:
+                logger.info("Found existing reportData declaration, attempting replacement...")
+                # 尝试替换现有的数据声明
+                replacement_patterns = [
+                    (r'(let\s+reportData\s*=\s*)\{[^}]*\}(\s*;?)', f'\\1{safe_data}\\2'),
+                    (r'(const\s+reportData\s*=\s*)\{[^}]*\}(\s*;?)', f'\\1{safe_data}\\2'),
+                    (r'(var\s+reportData\s*=\s*)\{[^}]*\}(\s*;?)', f'\\1{safe_data}\\2'),
+                    (r'(window\.pageData\s*=\s*)\{[^}]*\}(\s*;?)', f'\\1{safe_data}\\2'),
+                ]
+                
+                for pattern, replacement in replacement_patterns:
+                    if re.search(pattern, html_content, re.DOTALL):
+                        html_content = re.sub(pattern, replacement, html_content, count=1, flags=re.DOTALL)
+                        logger.info(f"Successfully replaced existing data using pattern: {pattern}")
+                        injection_success = True
+                        break
             else:
-                logger.warning("Data injection point not found in HTML")
+                logger.info("No existing reportData found, attempting fresh injection...")
+                # 尝试在空的占位符中注入数据
+                injection_patterns = [
+                    (r'let reportData = \{\};', f'let reportData = {safe_data};'),
+                    (r'const reportData = \{\};', f'const reportData = {safe_data};'),
+                    (r'var reportData = \{\};', f'var reportData = {safe_data};'),
+                    (r'window\.pageData = \{\};', f'window.pageData = {safe_data};'),
+                    # 添加对模板中新格式的支持
+                    (r'const reportData = \{\}; // 这个会被实际的JSON数据替换', f'const reportData = {safe_data}; // 实际数据已注入'),
+                ]
+                
+                for pattern, replacement in injection_patterns:
+                    if re.search(pattern, html_content):
+                        html_content = re.sub(pattern, replacement, html_content, count=1)
+                        logger.info(f"Successfully injected data using pattern: {pattern}")
+                        injection_success = True
+                        break
+            
+            # 最后的fallback：只有在完全没有找到任何数据变量时才执行
+            if not injection_success and not has_existing_data:
+                logger.warning("No data injection point found in HTML. Attempting fallback injection.")
+                script_start = html_content.find("<script>")
+                if script_start != -1:
+                    insertion_point = script_start + len("<script>")
+                    data_injection = f"\n        // 页面数据全局变量 - 实际数据注入\n        let reportData = {safe_data};\n"
+                    html_content = html_content[:insertion_point] + data_injection + html_content[insertion_point:]
+                    logger.info("Successfully injected data using fallback method")
+                    injection_success = True
+            
+            if not injection_success:
+                logger.error("Failed to find any suitable injection point for data")
+            else:
+                # 验证注入后没有重复声明
+                reportdata_count = len(re.findall(r'\b(?:let|const|var)\s+reportData\s*=', html_content, re.IGNORECASE))
+                if reportdata_count > 1:
+                    logger.error(f"WARNING: Found {reportdata_count} reportData declarations after injection!")
+                else:
+                    logger.info(f"✅ Data injection successful, found {reportdata_count} reportData declaration(s)")
                 
             return html_content
             
