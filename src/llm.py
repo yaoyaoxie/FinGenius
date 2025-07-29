@@ -30,7 +30,31 @@ from src.schema import (
 )
 
 
-REASONING_MODELS = ["o1", "o3-mini"]
+# 推理模型列表 - 这些模型使用不同的参数格式
+REASONING_MODELS = ["o1", "o3-mini", "deepseek-r1"]
+
+# 检查是否为推理模型的函数
+def is_reasoning_model(model_name: str) -> bool:
+    """检查模型是否为推理模型"""
+    if not model_name:
+        return False
+    
+    # 直接匹配
+    if model_name in REASONING_MODELS:
+        return True
+    
+    # 模糊匹配推理模型模式
+    reasoning_patterns = [
+        "o1", "o3", "deepseek-r1", "qwen-r1", 
+        "reasoning", "think", "cot"  # Chain of Thought
+    ]
+    
+    model_lower = model_name.lower()
+    for pattern in reasoning_patterns:
+        if pattern in model_lower:
+            return True
+    
+    return False
 
 
 class TokenCounter:
@@ -363,9 +387,20 @@ class LLM:
                 "messages": messages,
             }
 
-            if self.model in REASONING_MODELS:
+            # 对于ollama，使用统一的参数格式避免400错误
+            if self.api_type == "ollama":
+                # Ollama使用标准的OpenAI参数格式
+                params["max_tokens"] = self.max_tokens
+                params["temperature"] = (
+                    temperature if temperature is not None else self.temperature
+                )
+                logger.info(f"Using Ollama-compatible parameters: max_tokens={self.max_tokens}, temperature={params['temperature']}")
+            elif is_reasoning_model(self.model):
+                # 只有非Ollama的推理模型才使用max_completion_tokens
                 params["max_completion_tokens"] = self.max_tokens
+                logger.info(f"Using reasoning model parameters: max_completion_tokens={self.max_tokens}")
             else:
+                # 标准模型参数
                 params["max_tokens"] = self.max_tokens
                 params["temperature"] = (
                     temperature if temperature is not None else self.temperature
