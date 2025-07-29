@@ -88,7 +88,7 @@
 2. 克隆仓库：
 
    ```bash
-   git clone https://github.com/huayaoyuanjin/FinGenius.git
+   git clone https://github.com/HuaYaoAI/FinGenius.git
    cd FinGenius
    ```
 
@@ -109,7 +109,7 @@
 2. 克隆仓库：
 
    ```bash
-   git clone https://github.com/huayaoyuanjin/FinGenius.git
+   git clone https://github.com/HuaYaoAI/FinGenius.git
    cd FinGenius
    ```
 
