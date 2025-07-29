@@ -307,13 +307,10 @@ class CreateHtmlTool(BaseTool):
         elif isinstance(data, list):
             return [self._sanitize_data_for_js(item) for item in data]
         elif isinstance(data, str):
-            # Clean up problematic characters and content
-            sanitized = data.replace('\n', ' ').replace('\r', ' ')
-            sanitized = sanitized.replace('"', '\"').replace("'", "\'") 
-            # Truncate extremely long strings that might contain raw content
-            if len(sanitized) > 1000:
-                sanitized = sanitized[:997] + "..."
-            return sanitized
+            # Only truncate extremely long strings, let json.dumps handle escaping
+            if len(data) > 20000:  # 增加长度限制，避免过度截断
+                return data[:19977] + "..."
+            return data
         else:
             return data
     
@@ -324,7 +321,14 @@ class CreateHtmlTool(BaseTool):
             # Sanitize data first to prevent injection issues
             sanitized_data = self._sanitize_data_for_js(data)
             # Properly serialize data with safe escaping for JavaScript injection
-            safe_data = json.dumps(sanitized_data, ensure_ascii=True, indent=2, separators=(',', ': '))
+            # 使用最严格的JSON序列化参数确保安全
+            safe_data = json.dumps(
+                sanitized_data, 
+                ensure_ascii=True,  # 确保非ASCII字符被转义
+                indent=2, 
+                separators=(',', ': '),
+                sort_keys=True  # 排序键值
+            )
             injection_success = False
             
             # 首先检查是否已经存在reportData变量声明
