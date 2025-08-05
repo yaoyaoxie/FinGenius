@@ -575,6 +575,10 @@ class LLM:
 
             # Handle non-streaming request
             if not stream:
+                # 针对Ollama的特殊处理：确保使用正确的参数
+                if self.api_type == "ollama":
+                    params["stream"] = False
+                    
                 response = await self.client.chat.completions.create(**params)
 
                 if not response.choices or not response.choices[0].message.content:
@@ -582,24 +586,27 @@ class LLM:
 
                 self.update_token_count(response.usage.prompt_tokens)
                 return response.choices[0].message.content
+            else:
+                # Handle streaming request - 改善Ollama流式请求处理
+                if self.api_type == "ollama":
+                    params["stream"] = True
+                    
+                self.update_token_count(input_tokens)
+                response = await self.client.chat.completions.create(**params)
 
-            # Handle streaming request
-            self.update_token_count(input_tokens)
-            response = await self.client.chat.completions.create(**params)
+                collected_messages = []
+                async for chunk in response:
+                    chunk_message = chunk.choices[0].delta.content or ""
+                    collected_messages.append(chunk_message)
+                    print(chunk_message, end="", flush=True)
 
-            collected_messages = []
-            async for chunk in response:
-                chunk_message = chunk.choices[0].delta.content or ""
-                collected_messages.append(chunk_message)
-                print(chunk_message, end="", flush=True)
+                print()  # Newline after streaming
+                full_response = "".join(collected_messages).strip()
 
-            print()  # Newline after streaming
-            full_response = "".join(collected_messages).strip()
+                if not full_response:
+                    raise ValueError("Empty response from streaming LLM")
 
-            if not full_response:
-                raise ValueError("Empty response from streaming LLM")
-
-            return full_response
+                return full_response
 
         except TokenLimitExceeded:
             raise
