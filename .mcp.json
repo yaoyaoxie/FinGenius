@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "howtocook-mcp": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "howtocook-mcp"]
+    },
+    "amap": {
+      "type": "sse",
+      "url": "https://mcp.amap.com/sse?key=ce87b7cd9fad1b8e0802313eb9ed3570"
+    }
+  }
+}

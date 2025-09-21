@@ -1,0 +1,86 @@
+安装uv环境非常简单，按照以下步骤操作：
+
+  安装uv（跨平台）
+
+  Windows (PowerShell):
+  powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+  macOS/Linux:
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+
+  或者使用pip:
+  pip install uv
+
+  验证安装
+
+  uv --version
+
+  在FinGenius项目中使用uv
+
+  # 进入项目目录
+  cd FinGenius
+
+  # 创建Python 3.12虚拟环境
+  uv venv --python 3.12
+
+  # 激活虚拟环境
+  # Windows:
+  .venv\Scripts\activate
+  # macOS/Linux:
+  source .venv/bin/activate
+
+  # 安装依赖（非常快！）
+  uv pip install -r requirements.txt
+
+  # 运行项目
+  python main.py 000001
+
+  uv的优势
+
+  - ⚡ 极速安装：比pip快10-50倍
+  - 🎯 精准依赖：自动锁定依赖版本
+  - 🔄 智能缓存：重复安装几乎瞬间完成
+  - 📦 统一管理：支持Python版本管理
+
+
+
+
+
+
+
+● 增加UV网络超时时间的几种方法：
+
+  方法1：临时设置（当前会话有效）
+
+  # Windows PowerShell
+  $env:UV_HTTP_TIMEOUT=300
+
+  # Windows CMD
+  set UV_HTTP_TIMEOUT=300
+
+  # macOS/Linux
+  export UV_HTTP_TIMEOUT=300
+
+  方法2：永久设置（推荐）
+
+  Windows（PowerShell管理员）:
+  [Environment]::SetEnvironmentVariable("UV_HTTP_TIMEOUT", "300", "User")
+
+  Windows（CMD）:
+  setx UV_HTTP_TIMEOUT 300
+
+  macOS/Linux（添加到/.bashrc或/.zshrc）:
+  echo 'export UV_HTTP_TIMEOUT=300' >> ~/.bashrc
+  source ~/.bashrc
+
+  方法3：一次性使用
+
+  # 直接带环境变量运行
+  UV_HTTP_TIMEOUT=300 uv pip install -r requirements.txt
+
+  验证设置
+
+  echo $UV_HTTP_TIMEOUT  # Linux/macOS
+  echo %UV_HTTP_TIMEOUT%  # Windows CMD
+
+

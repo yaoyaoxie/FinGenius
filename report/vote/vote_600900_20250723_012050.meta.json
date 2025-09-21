@@ -1,0 +1,10 @@
+{
+  "type": "vote_results",
+  "final_decision": "No decision",
+  "total_votes": 0,
+  "report_type": "vote",
+  "stock_code": "600900",
+  "created_at": "2025-07-23T01:20:50.723708",
+  "file_size": 221,
+  "filename": "vote_600900_20250723_012050.json"
+}

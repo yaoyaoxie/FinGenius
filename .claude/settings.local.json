@@ -1,0 +1,26 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.moonshot.cn/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "sk-SgIk5N8WUgIZNSqIIp9B6SJ2IWmpr6M5F1joLdljjhAbNLAw "
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(timeout:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(cp:*)",
+      "Bash(export:*)",
+      "mcp__amap__maps_text_search",
+      "Bash(kill:*)",
+      "Bash(touch:*)",
+      "Bash(git config:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "howtocook-mcp",
+    "amap"
+  ]
+}

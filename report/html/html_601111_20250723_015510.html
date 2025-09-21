@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinGenius 股票分析报告 - 中国国航(601111)</title>
+    
+    <!-- Bootstrap 5 & FontAwesome CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* FinGenius 品牌色彩和主题变量 */
+        :root {
+            --fg-primary: #4a6bdf;
+            --fg-primary-dark: #3a5bdf;
+            --fg-success: #28a745;
+            --fg-danger: #dc3545;
+            --fg-light-bg: #f8f9fa;
+            --fg-white: #ffffff;
+            --fg-dark-bg: #1a1d23;
+            --fg-dark-card: #2d3748;
+            --fg-dark-text: #e2e8f0;
+            --fg-border: #dee2e6;
+            --fg-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        /* 深色模式变量覆盖 */
+        [data-theme="dark"] {
+            --bs-body-bg: var(--fg-dark-bg);
+            --bs-body-color: var(--fg-dark-text);
+            --bs-card-bg: var(--fg-dark-card);
+            --bs-border-color: #4a5568;
+        }
+        
+        /* 全局样式 */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            background-color: var(--bs-body-bg, var(--fg-light-bg));
+            transition: all 0.3s ease;
+        }
+        
+        /* 导航栏样式 */
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--fg-primary) !important;
+            font-size: 1.5rem;
+        }
+        
+        .navbar {
+            box-shadow: var(--fg-shadow);
+            background-color: var(--bs-card-bg, var(--fg-white)) !important;
+        }
+        
+        /* 卡片统一样式 */
+        .card {
+            border: none;
+            box-shadow: var(--fg-shadow);
+            border-radius: 0.75rem;
+            background-color: var(--bs-card-bg, var(--fg-white));
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 投票结果可视化 */
+        .vote-progress {
+            height: 1.5rem;
+            background-color: var(--fg-border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .vote-progress-bullish {
+            background: linear-gradient(90deg, var(--fg-success), #34ce57);
+            height: 100%;
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .vote-progress-bearish {
+            background: linear-gradient(90deg, var(--fg-danger), #e55353);
+            height: 100%;
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        
+        /* 时间线样式 */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--fg-primary), var(--fg-primary-dark));
+            transform: translateX(-50%);
+            border-radius: 1.5px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin: 2.5rem 0;
+        }
+        
+        .timeline-item-left .card {
+            margin-right: 50%;
+            margin-left: 0;
+            transform: translateX(-1rem);
+        }
+        
+        .timeline-item-right .card {
+            margin-left: 50%;
+            margin-right: 0;
+            transform: translateX(1rem);
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 1.5rem;
+            width: 1rem;
+            height: 1rem;
+            background-color: var(--fg-primary);
+            border: 3px solid var(--bs-body-bg, var(--fg-white));
+            border-radius: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        /* 移动端时间线适配 */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 1rem;
+            }
+            
+            .timeline-item::before {
+                left: 1rem;
+            }
+            
+            .timeline-item-left .card,
+            .timeline-item-right .card {
+                margin-left: 3rem;
+                margin-right: 0;
+                transform: none;
+            }
+        }
+        
+        /* 回到顶部按钮 */
+        #backToTop {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: var(--fg-primary);
+            border: none;
+            color: white;
+            display: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+        }
+        
+        #backToTop:hover {
+            background-color: var(--fg-primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        #backToTop.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 自定义Badge样式 */
+        .badge-bullish {
+            background: linear-gradient(45deg, var(--fg-success), #34ce57);
+            color: white;
+        }
+        
+        .badge-bearish {
+            background: linear-gradient(45deg, var(--fg-danger), #e55353);
+            color: white;
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        /* Accordion自定义样式 */
+        .accordion-button:not(.collapsed) {
+            background-color: var(--fg-primary);
+            color: white;
+        }
+        
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(74, 107, 223, 0.25);
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- 粘性导航栏 -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>FinGenius
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#overview">
+                            <i class="fas fa-chart-pie me-1"></i>概览
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#analysis">
+                            <i class="fas fa-microscope me-1"></i>分析
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#debate">
+                            <i class="fas fa-comments me-1"></i>对话
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#disclaimer">
+                            <i class="fas fa-info-circle me-1"></i>声明
+                        </a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <button id="themeToggle" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+ 
+    <!-- 主内容区域 -->
+    <main class="container py-4">
+        <!-- 概览部分 -->
+        <section id="overview" class="mb-5">
+            <div class="text-center mb-4 fade-in-up">
+                <h1 class="display-4 fw-bold text-primary mb-2">
+                    中国国航(601111) 综合分析报告
+                </h1>
+                <p class="lead text-muted">基于FinGenius AI多专家协同分析</p>
+                <p class="text-muted">报告生成时间：2025年7月23日 01:44:25</p>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-lg fade-in-up">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <h3 class="card-title mb-3">
+                                    <i class="fas fa-poll me-2 text-primary"></i>专家投票结果
+                                </h3>
+                                <div class="mb-4">
+                                    <span class="badge badge-bearish fs-4 px-3 py-2">
+                                        <i class="fas fa-arrow-down me-2"></i>看跌 Bearish
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="row text-center mb-4">
+                                <div class="col-6">
+                                    <div class="p-3">
+                                        <h4 class="text-success mb-1">1</h4>
+                                        <p class="text-muted mb-0">看涨票数</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3">
+                                        <h4 class="text-danger mb-1">5</h4>
+                                        <p class="text-muted mb-0">看跌票数</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="vote-progress mb-3" style="position: relative;">
+                                <div class="vote-progress-bullish" style="width: 16.7%;">
+                                    16.7%
+                                </div>
+                                <div class="vote-progress-bearish" style="width: 83.3%;">
+                                    83.3%
+                                </div>
+                            </div>
+                            
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <small class="text-success fw-semibold">16.7% 看涨</small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-danger fw-semibold">83.3% 看跌</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+ 
+        <!-- 分析部分 -->
+        <section id="analysis" class="mb-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">
+                    <i class="fas fa-microscope me-2 text-primary"></i>专家分析详情
+                </h2>
+                <p class="text-muted">六位AI专家的深度分析结果</p>
+            </div>
+            
+            <div class="accordion" id="analysisAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSentiment">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSentiment">
+                            <i class="fas fa-heart-pulse me-2 text-primary"></i>
+                            市场情感分析
+                        </button>
+                    </h2>
+                    <div id="collapseSentiment" class="accordion-collapse collapse show" data-bs-parent="#analysisAccordion">
+                        <div class="accordion-body">
+                            <div class="analysis-content">
+                                <p><strong>当前市场情绪：极度悲观</strong></p>
+                                <p>基于最新搜索数据，市场对航空板块整体持谨慎态度。中国国航作为行业龙头，面临以下情绪压力：</p>
+                                <ul>
+                                    <li>半年度预亏17-22亿元引发市场担忧</li>
+                                    <li>国际航线恢复不及预期</li>
+                                    <li>油价波动和汇率风险持续存在</li>
+                                    <li>高铁竞争加剧分流客源</li>
+                                </ul>
+                                <p>尽管客座率数据有所改善（6月平均客座率81.1%），但市场更关注盈利能力的恢复时点。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingRisk">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRisk">
+                            <i class="fas fa-shield-alt me-2 text-primary"></i>
+                            风险控制分析
+                        </button>
+                    </h2>
+                    <div id="collapseRisk" class="accordion-collapse collapse" data-bs-parent="#analysisAccordion">
+                        <div class="accordion-body">
+                            <div class="analysis-content">
+                                <p><strong>风险等级：高风险（红色预警）</strong></p>
+                                <p><strong>关键风险点：</strong></p>
+                                <ul>
+                                    <li><strong>财务风险：</strong>2025年半年度预亏17-22亿元，虽然同比减亏但仍处亏损状态</li>
+                                    <li><strong>流动性风险：</strong>流动比率0.78，低于行业均值1.2，短期偿债能力较弱</li>
+                                    <li><strong>汇率风险：</strong>美元负债占比高，人民币贬值将直接增加财务费用</li>
+                                    <li><strong>竞争风险：</strong>高铁网络持续扩张，分流中短程航线客源</li>
+                                </ul>
+                                <p><strong>风险控制建议：</strong></p>
+                                <ul>
+                                    <li>建议设立流动性应急委员会，确保72小时内启动应急预案</li>
+                                    <li>推进飞机售后回租计划，目标回笼现金50亿元</li>
+                                    <li>开展远期结汇锁定汇率风险</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingHotMoney">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHotMoney">
+                            <i class="fas fa-fire me-2 text-primary"></i>
+                            游资流向分析
+                        </button>
+                    </h2>
+                    <div id="collapseHotMoney" class="accordion-collapse collapse" data-bs-parent="#analysisAccordion">
+                        <div class="accordion-body">
+                            <div class="analysis-content">
+                                <p><strong>游资关注度：冰点状态</strong></p>
+                                <p>当前市场热点集中在雅下水电、民爆、工程机械等板块，航空板块未进入游资狙击范围。</p>
+                                <p><strong>资金流向特征：</strong></p>
+                                <ul>
+                                    <li>5日累计净流出1.83亿元，资金持续流出</li>
+                                    <li>行业资金排名2094位，处于市场底部</li>
+                                    <li>日均成交额不足5亿，流动性陷阱明显</li>
+                                </ul>
+                                <p><strong>游资偏好分析：</strong></p>
+                                <p>游资更可能选择市值更小的吉祥航空(603885)或弹性更大的华夏航空(002928)作为板块突破口。中国国航因1305亿总市值，游资短期撬动难度较高。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTechnical">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTechnical">
+                            <i class="fas fa-chart-area me-2 text-primary"></i>
+                            技术面分析
+                        </button>
+                    </h2>
+                    <div id="collapseTechnical" class="accordion-collapse collapse" data-bs-parent="#analysisAccordion">
+                        <div class="accordion-body">
+                            <div class="analysis-content">
+                                <p><strong>技术形态：下降通道清晰</strong></p>
+                                <p><strong>关键技术指标：</strong></p>
+                                <ul>
+                                    <li>当前价格：7.48元（2025年7月23日收盘）</li>
+                                    <li>年内低点：6.85元（2025年2月19日）</li>
+                                    <li>反弹幅度：仅9%，仍处下降通道下轨</li>
+                                    <li>上方压力：7.80-8.00元区域阻力重重</li>
+                                </ul>
+                                <p><strong>量价关系：</strong></p>
+                                <ul>
+                                    <li>反弹阶段量能持续萎缩，典型"价涨量缩"</li>
+                                    <li>0.72%换手率处于30日低位，缺乏增量资金</li>
+                                    <li>99%筹码深度套牢，上方抛压沉重</li>
+                                </ul>
+                                <p><strong>技术目标位：6.50元（技术派一致看空目标）</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingChip">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChip">
+                            <i class="fas fa-layer-group me-2 text-primary"></i>
+                            筹码分布分析
+                        </button>
+                    </h2>
+                    <div id="collapseChip" class="accordion-collapse collapse" data-bs-parent="#analysisAccordion">
+                        <div class="accordion-body">
+                            <div class="analysis-content">
+                                <p><strong>筹码形态：底部单峰密集</strong></p>
+                                <p><strong>关键数据：</strong></p>
+                                <ul>
+                                    <li>主力成本：7.48元（与现价完全重合）</li>
+                                    <li>90%集中度：8.89%（高度集中）</li>
+                                    <li>70%集中度：5.76%（极度控盘）</li>
+                                    <li>获利比例：50.6%（多空平衡临界点）</li>
+                                </ul>
+                                <p><strong>筹码分布区间：</strong></p>
+                                <ul>
+                                    <li>90%筹码分布在6.90-8.25元区间</li>
+                                    <li>70%筹码集中在7.12-7.99元狭窄区间</li>
+                                    <li>核心成交密集区明确，筹码锁定性强</li>
+                                </ul>
+                                <p><strong>主力行为判断：</strong>底部建仓末期，控盘程度达到"极度控盘"级别，等待政策催化或行业拐点启动行情。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingBigDeal">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBigDeal">
+                            <i class="fas fa-dollar-sign me-2 text-primary"></i>
+                            大单异动分析
+                        </button>
+                    </h2>
+                    <div id="collapseBigDeal" class="accordion-collapse collapse" data-bs-parent="#analysisAccordion">
+                        <div class="accordion-body">
+                            <div class="analysis-content">
+                                <p><strong>资金流向：持续流出状态</strong></p>
+                                <p><strong>关键数据：</strong></p>
+                                <ul>
+                                    <li>当日大单净流入：+2,341万元（温和流入）</li>
+                                    <li>5日累计主力净流入：-1.83亿元（持续流出）</li>
+                                    <li>行业资金排名：2094位（市场底部）</li>
+                                    <li>超大单vs大单：机构仅小幅试水，合力不足</li>
+                                </ul>
+                                <p><strong>资金特征：</strong></p>
+                                <ul>
+                                    <li>连续3日净流入但金额不足前期单日流出的一半</li>
+                                    <li>属于"弱修复"性质，持续性存疑</li>
+                                    <li>日均成交8.33亿手，流动性适中但缺乏增量</li>
+                                </ul>
+                                <p><strong>结论：</strong>当前虽有资金回流，但力度与持续性不足，尚未扭转下行趋势。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+ 
+        <!-- 辩论部分 -->
+        <section id="debate" class="mb-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">
+                    <i class="fas fa-users me-2 text-primary"></i>专家辩论过程
+                </h2>
+                <p class="text-muted">AI专家实时辩论的完整记录</p>
+            </div>
+            
+            <div class="timeline" id="debateTimeline">
+                <div class="timeline-item timeline-item-left">
+                    <div class="card border-0 shadow-sm fade-in-up">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    <span class="fw-bold">技术分析师</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="opacity-75">第1轮</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="debate-content">
+                                <p>作为技术分析师，我必须旗帜鲜明地表达我的观点：看跌中国国航！技术面下降通道清晰，资金面持续流出，99%筹码深度套牢，行业基本面恶化。现在买入就像在泰坦尼克号上抢头等舱，目标位看到6.50元！</p>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    2025-07-23 01:44:25
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item timeline-item-right">
+                    <div class="card border-0 shadow-sm fade-in-up">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    <span class="fw-bold">筹码分析师</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="opacity-75">第1轮</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="debate-content">
+                                <p>作为筹码分析师，我必须站出来反驳技术派的悲观论调！当前7.48元就是主力精确控盘成本线，90%集中度仅8.89%的底部单峰密集形态显示"极度控盘"状态。虽然显示99%套牢，但70%筹码集中在7.12-7.99元狭窄区间，实际抛压有限。结合近3日2341万净流入和0.72%极低换手率，主力正在偷偷吸筹。我的筹码模型显示第一目标位8.25元，第二目标位8.80元，现在正是绝佳击球区！</p>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    2025-07-23 01:44:25
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item timeline-item-left">
+                    <div class="card border-0 shadow-sm fade-in-up">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    <span class="fw-bold">大单分析师</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="opacity-75">第2轮</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="debate-content">
+                                <p>作为大单分析师，我用资金流向的铁证宣判：中国国航必跌！5日累计净流出1.83亿、行业资金排名2094位、0.72%地量反弹，这些就是死刑判决书！7.48元是墓碑不是支撑，目标位6.50元！现在看多就是给主力接盘！</p>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    2025-07-23 01:44:25
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item timeline-item-right">
+                    <div class="card border-0 shadow-sm fade-in-up">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    <span class="fw-bold">市场情绪分析师</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="opacity-75">第2轮</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="debate-content">
+                                <p>作为市场情绪分析师，我必须做出最终裁决：看跌！尽管筹码派描绘美好蓝图，但铁证如山：半年度巨亏17-22亿、5日主力净流出1.83亿、行业资金排名垫底2094位，这些才是市场真实投票！7.48元不是底，是下跌中继！我坚决看跌至6.50元！</p>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    2025-07-23 01:44:25
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item timeline-item-left">
+                    <div class="card border-0 shadow-sm fade-in-up">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    <span class="fw-bold">风险控制专家</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="opacity-75">第3轮</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="debate-content">
+                                <p>作为风险控制专家，我基于财务风险、资金流出和行业基本面恶化三大铁证，坚决投票看跌！半年预亏22亿、5日净流出1.83亿、99%筹码深度套牢，这不是回调，这是价值毁灭的开始！</p>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    2025-07-23 01:44:25
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item timeline-item-right">
+                    <div class="card border-0 shadow-sm fade-in-up">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    <span class="fw-bold">大单异动分析专家</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="opacity-75">第3轮</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="debate-content">
+                                <p>作为大单异动分析专家，我基于资金流向铁证给出最终判决：5日主力净流出1.83亿、行业资金排名垫底2094位、99%筹码深度套牢，这些都不是洗盘而是价值毁灭！我坚决看跌至6.50元！</p>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    2025-07-23 01:44:25
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+    </main>
+    
+    <!-- 免责声明 -->
+    <footer id="disclaimer" class="bg-light py-4 mt-5 border-top">
+        <div class="container text-center">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-robot me-2 text-primary"></i>AI生成报告声明
+                    </h5>
+                    <p class="mb-2">
+                        本报告由FinGenius人工智能系统自动生成，基于公开数据和算法模型进行分析。
+                    </p>
+                    <p class="mb-2 text-warning fw-semibold">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        内容仅供参考，不构成投资建议。投资有风险，决策需谨慎。
+                    </p>
+                    <p class="text-muted small mb-0">
+                        &copy; 2025 FinGenius AI分析系统. 版权所有.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+ 
+    <!-- 回到顶部按钮 -->
+    <button id="backToTop" title="回到顶部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 页面数据全局变量
+        const reportData = {
+            "stock_code": "601111",
+            "research_results": {
+                "sentiment": "基于最新搜索数据，市场对航空板块整体持谨慎态度...",
+                "risk": "风险等级：高风险（红色预警）...",
+                "hot_money": "游资关注度：冰点状态...",
+                "technical": "技术形态：下降通道清晰...",
+                "chip_analysis": "筹码形态：底部单峰密集...",
+                "big_deal": "资金流向：持续流出状态..."
+            },
+            "battle_results": {
+                "final_decision": "bearish",
+                "vote_count": {
+                    "bullish": 1,
+                    "bearish": 5
+                },
+                "debate_history": [
+                    {
+                        "speaker": "技术分析师",
+                        "content": "作为技术分析师，我必须旗帜鲜明地表达我的观点：看跌中国国航！技术面下降通道清晰，资金面持续流出，99%筹码深度套牢，行业基本面恶化。现在买入就像在泰坦尼克号上抢头等舱，目标位看到6.50元！",
+                        "timestamp": "2025-07-23 01:44:25",
+                        "round": 1
+                    },
+                    {
+                        "speaker": "筹码分析师",
+                        "content": "作为筹码分析师，我必须站出来反驳技术派的悲观论调！当前7.48元就是主力精确控盘成本线，90%集中度仅8.89%的底部单峰密集形态显示\"极度控盘\"状态...",
+                        "timestamp": "2025-07-23 01:44:25",
+                        "round": 1
+                    },
+                    {
+                        "speaker": "大单分析师",
+                        "content": "作为大单分析师，我用资金流向的铁证宣判：中国国航必跌！5日累计净流出1.83亿、行业资金排名2094位、0.72%地量反弹...",
+                        "timestamp": "2025-07-23 01:44:25",
+                        "round": 2
+                    },
+                    {
+                        "speaker": "市场情绪分析师",
+                        "content": "作为市场情绪分析师，我必须做出最终裁决：看跌！尽管筹码派描绘美好蓝图，但铁证如山：半年度巨亏17-22亿...",
+                        "timestamp": "2025-07-23 01:44:25",
+                        "round": 2
+                    },
+                    {
+                        "speaker": "风险控制专家",
+                        "content": "作为风险控制专家，我基于财务风险、资金流出和行业基本面恶化三大铁证，坚决投票看跌！",
+                        "timestamp": "2025-07-23 01:44:25",
+                        "round": 3
+                    },
+                    {
+                        "speaker": "大单异动分析专家",
+                        "content": "作为大单异动分析专家，我基于资金流向铁证给出最终判决：5日主力净流出1.83亿...",
+                        "timestamp": "2025-07-23 01:44:25",
+                        "round": 3
+                    }
+                ]
+            },
+            "timestamp": "20250723_014425"
+        };
+        
+        // DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化交互功能
+            initializeInteractions();
+        });
+        
+        // 初始化交互功能
+        function initializeInteractions() {
+            // 主题切换
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                body.setAttribute('data-theme', newTheme);
+                
+                // 更新按钮图标
+                const icon = themeToggle.querySelector('i');
+                icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                
+                // 保存主题偏好
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            // 恢复保存的主题
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            body.setAttribute('data-theme', savedTheme);
+            const icon = themeToggle.querySelector('i');
+            icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            
+            // 回到顶部按钮
+            const backToTop = document.getElementById('backToTop');
+            
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 400) {
+                    backToTop.classList.add('show');
+                } else {
+                    backToTop.classList.remove('show');
+                }
+            });
+            
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 平滑滚动锚点
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

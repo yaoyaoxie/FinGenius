@@ -1,0 +1,12 @@
+{
+  "stock_code": "600900",
+  "timestamp": "20250723_010544",
+  "final_decision": "No decision",
+  "vote_count": {},
+  "agent_order": [],
+  "vote_details": {
+    "bullish": 0,
+    "bearish": 0,
+    "total_agents": 0
+  }
+}

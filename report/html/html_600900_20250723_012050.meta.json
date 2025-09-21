@@ -1,0 +1,18 @@
+{
+  "original_path": "report/report_600900_20250723_010544.html",
+  "content_type": "html",
+  "data_size": 86314,
+  "has_data": true,
+  "generated_by": "create_html_tool",
+  "data_keys": [
+    "stock_code",
+    "research_results",
+    "battle_results",
+    "timestamp"
+  ],
+  "report_type": "html",
+  "stock_code": "600900",
+  "created_at": "2025-07-23T01:20:50.715737",
+  "file_size": 86314,
+  "filename": "html_600900_20250723_012050.html"
+}

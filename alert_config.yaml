@@ -1,0 +1,159 @@
+# 股票价值分析预警系统配置文件
+
+# 邮件配置
+email:
+  enabled: false
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  username: "your_email@gmail.com"
+  password: "your_app_password"
+  from_email: "your_email@gmail.com"
+  to_emails:
+    - "recipient1@example.com"
+    - "recipient2@example.com"
+
+# Webhook配置
+webhook:
+  enabled: false
+  urls:
+    - "https://your-webhook-endpoint.com/alert"
+    - "https://another-webhook.com/value-alert"
+  secret: "your-webhook-secret-key"
+
+# 短信配置（需要第三方SMS服务）
+sms:
+  enabled: false
+  api_key: "your-sms-api-key"
+  api_secret: "your-sms-api-secret"
+  phone_numbers:
+    - "+8613800138000"
+    - "+8613900139000"
+
+# 调度器配置
+scheduler:
+  enabled: true
+  check_interval_minutes: 60  # 检查间隔（分钟）
+  market_hours_only: true     # 是否只在交易时间内检查
+
+# 默认预警配置
+default_alerts:
+  - symbol: "601899"
+    alert_type: "undervalued"
+    threshold: 0.30
+    enabled: true
+    
+  - symbol: "000001"
+    alert_type: "overvalued"
+    threshold: 0.25
+    enabled: true
+    
+  - symbol: "600519"
+    alert_type: "deviation"
+    threshold: 0.20
+    enabled: true
+
+# 高级配置
+advanced:
+  # 冷却时间（小时）- 同一股票同一类型预警的最小间隔
+  cooldown_hours: 24
+  
+  # 最大重试次数
+  max_retries: 3
+  
+  # 超时时间（秒）
+  timeout_seconds: 30
+  
+  # 日志级别
+  log_level: "INFO"
+  
+  # 数据库配置
+  database:
+    path: "value_alerts.db"
+    backup_enabled: true
+    backup_interval_days: 7
+  
+  # 性能监控
+  performance_monitoring:
+    enabled: true
+    slow_query_threshold_ms: 1000
+    
+  # 安全设置
+  security:
+    enable_encryption: false
+    secret_key: "your-secret-key-here"
+    
+  # API限制
+  rate_limiting:
+    enabled: true
+    max_requests_per_minute: 60
+    max_requests_per_hour: 1000
+
+# 股票特定配置
+stock_specific:
+  "601899":  # 紫金矿业
+    resource_weight: 0.4  # 资源价值模型权重
+    dcf_weight: 0.3       # DCF模型权重
+    pb_roe_weight: 0.2    # PB-ROE模型权重
+    asset_weight: 0.1     # 资产基础模型权重
+    
+    # 资源数据配置
+    resources:
+      gold:
+        reserves: 3000      # 吨
+        price_per_unit: 450000000  # 元/吨
+        cost_per_unit: 250000000   # 元/吨
+      copper:
+        reserves: 75000000  # 吨
+        price_per_unit: 70000      # 元/吨
+        cost_per_unit: 40000       # 元/吨
+      zinc:
+        reserves: 10000000  # 吨
+        price_per_unit: 25000      # 元/吨
+        cost_per_unit: 15000       # 元/吨
+        
+  "000001":  # 平安银行
+    dcf_weight: 0.5       # DCF模型权重（金融股适用）
+    pb_roe_weight: 0.4    # PB-ROE模型权重
+    asset_weight: 0.1     # 资产基础模型权重
+    resource_weight: 0.0  # 不适用资源模型
+    
+  "600519":  # 贵州茅台
+    dcf_weight: 0.4       # DCF模型权重
+    pb_roe_weight: 0.3    # PB-ROE模型权重
+    asset_weight: 0.2     # 资产基础模型权重
+    resource_weight: 0.1  # 品牌价值权重（低权重）
+
+# 通知模板配置
+notification_templates:
+  email:
+    subject: "股票价值预警 - {symbol}"
+    body: |
+      尊敬的投资者：
+      
+      您关注的股票 {symbol} 触发了价值预警：
+      
+      预警类型：{alert_type}
+      当前价格：¥{current_price:.2f}
+      合理价值区间：¥{fair_value_low:.2f} - ¥{fair_value_high:.2f}
+      偏离度：{deviation:.1%}
+      
+      {alert_message}
+      
+      分析时间：{timestamp}
+      
+      此邮件由股票真实价值分析系统自动发送。
+      
+  webhook:
+    format: "json"
+    payload:
+      symbol: "{symbol}"
+      alert_type: "{alert_type}"
+      current_price: "{current_price}"
+      fair_value_range: "{fair_value_low}-{fair_value_high}"
+      deviation: "{deviation}"
+      message: "{alert_message}"
+      timestamp: "{timestamp}"
+      
+  sms:
+    template: "股票{symbol}价值预警：{alert_message}"
+    max_length: 70  # 短信最大长度

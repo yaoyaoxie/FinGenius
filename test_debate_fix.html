@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>辩论展示测试</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <h1>辩论展示测试</h1>
+        <div id="debateTimeline"></div>
+        <button class="btn btn-primary" onclick="testDebate()">测试辩论展示</button>
+    </div>
+
+    <script>
+        // 测试数据
+        const testData = [
+            {
+                "speaker": "游资分析师",
+                "content": "作为游资分析师，我必须旗帜鲜明地表达我的观点：**看跌长江电力（600900）！**\n\n让我用数据说话：\n\n**资金流向铁证如山：**\n- 今日主力净流出**4.88亿元**，这是近20日最大单日流出！\n- 超大单和大单同步减仓，机构与游资形成\"多杀多\"局面\n- 20日累计净流出**21.7亿元**，这种持续失血让我夜不能寐！",
+                "timestamp": "2025-07-23 00:56:45",
+                "round": 1
+            },
+            {
+                "speaker": "筹码分析师",
+                "content": "作为筹码分析师，我完全赞同游资分析师的看跌立场！让我用筹码的铁证来加码这个判断：\n\n**筹码层面已经发出死亡信号！**\n\n1. **主力成本乖离率4.93%** - 这不是安全垫，这是主力出货的黄金距离！\n2. **获利比例5天暴跌9%** - 从89%到80%，这种断崖式下跌说明什么？\n3. **99.2%的套牢盘** - 这个数字让我触目惊心！",
+                "timestamp": "2025-07-23 00:57:51",
+                "round": 1
+            }
+        ];
+
+        // 简化版渲染函数
+        function testDebate() {
+            const timeline = document.getElementById('debateTimeline');
+            timeline.innerHTML = testData.map((item, index) => {
+                const isLeft = index % 2 === 0;
+                const content = item.content
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                    .replace(/\n/g, '<br>');
+
+                return `
+                    <div class="row mb-4">
+                        <div class="col-md-8 ${isLeft ? 'offset-md-0' : 'offset-md-4'}">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <strong>${item.speaker}</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p>${content}</p>
+                                    <small class="text-muted">${item.timestamp}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 页面加载后自动测试
+        document.addEventListener('DOMContentLoaded', testDebate);
+    </script>
+</body>
+</html>
