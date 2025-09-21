@@ -28,7 +28,10 @@
       "Bash(gh repo fork:*)",
       "WebFetch(domain:api.github.com)",
       "Bash(git pull:*)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(tree:*)",
+      "Bash(mkdir:*)",
+      "Bash(git checkout:*)"
     ]
   },
   "enabledMcpjsonServers": [
