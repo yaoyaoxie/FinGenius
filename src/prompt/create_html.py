@@ -493,11 +493,8 @@ CREATE_HTML_TEMPLATE_PROMPT = """
         
         // DOM加载完成后执行
         document.addEventListener('DOMContentLoaded', function() {
-            // 数据安全检查和渲染
-            if (typeof window.pageData !== 'undefined') {
-                reportData = window.pageData;
-                renderPage();
-            }
+            // 直接渲染页面，数据将在注入时被替换
+            renderPage();
             
             // 初始化交互功能
             initializeInteractions();
@@ -514,13 +511,14 @@ CREATE_HTML_TEMPLATE_PROMPT = """
         function renderOverview() {
             const overview = document.getElementById('overview');
             const stockCode = reportData.stock_code || '未知';
-            const battleResults = reportData.battle_results || {};
-            const voteCount = battleResults.vote_count || { bullish: 0, bearish: 0 };
-            const finalDecision = battleResults.final_decision || 'unknown';
+            const voteResults = reportData.vote_results || {};
+            const bullishCount = voteResults.bullish || 0;
+            const bearishCount = voteResults.bearish || 0;
+            const finalDecision = voteResults.final_decision || 'unknown';
             
-            const totalVotes = voteCount.bullish + voteCount.bearish;
-            const bullishPct = totalVotes > 0 ? (voteCount.bullish / totalVotes * 100).toFixed(1) : 0;
-            const bearishPct = totalVotes > 0 ? (voteCount.bearish / totalVotes * 100).toFixed(1) : 0;
+            const totalVotes = bullishCount + bearishCount;
+            const bullishPct = totalVotes > 0 ? (bullishCount / totalVotes * 100).toFixed(1) : 0;
+            const bearishPct = totalVotes > 0 ? (bearishCount / totalVotes * 100).toFixed(1) : 0;
             
             const decisionBadge = finalDecision.toLowerCase() === 'bullish' ? 
                 `<span class="badge badge-bullish fs-4 px-3 py-2"><i class="fas fa-arrow-up me-2"></i>看涨 Bullish</span>` :
@@ -550,13 +548,13 @@ CREATE_HTML_TEMPLATE_PROMPT = """
                                 <div class="row text-center mb-4">
                                     <div class="col-6">
                                         <div class="p-3">
-                                            <h4 class="text-success mb-1">${voteCount.bullish}</h4>
+                                            <h4 class="text-success mb-1">${bullishCount}</h4>
                                             <p class="text-muted mb-0">看涨票数</p>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="p-3">
-                                            <h4 class="text-danger mb-1">${voteCount.bearish}</h4>
+                                            <h4 class="text-danger mb-1">${bearishCount}</h4>
                                             <p class="text-muted mb-0">看跌票数</p>
                                         </div>
                                     </div>
@@ -649,7 +647,7 @@ CREATE_HTML_TEMPLATE_PROMPT = """
         // 渲染辩论时间线
         function renderDebate() {
             const timeline = document.getElementById('debateTimeline');
-            const debateHistory = reportData.battle_results?.debate_history || [];
+            const debateHistory = reportData.debate_history || [];
             
             if (debateHistory.length === 0) {
                 timeline.innerHTML = `
@@ -768,7 +766,7 @@ CREATE_HTML_TEMPLATE_PROMPT = """
         }
         
         // 页面数据注入点 - 这里会被实际数据替换
-        window.pageData = {}; // 这个会被实际的JSON数据替换
+        const reportData = {}; // 这个会被实际的JSON数据替换
     </script>
 </body>
 </html>
